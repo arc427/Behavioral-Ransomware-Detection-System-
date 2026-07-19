@@ -13,6 +13,9 @@ from backend.routes.telemetry_routes import telemetry_bp
 from backend.routes.xai_routes import xai_bp
 
 
+from backend.models import db
+
+
 def create_app(overrides: dict | None = None) -> Flask:
     app = Flask(__name__)
     app.config.from_mapping(
@@ -21,9 +24,34 @@ def create_app(overrides: dict | None = None) -> Flask:
         MODEL_PATH=config.MODEL_PATH,
         REPORT_PATH=config.REPORT_PATH,
         MAX_PAGE_SIZE=config.MAX_PAGE_SIZE,
+        DATABASE_PATH=config.DATABASE_PATH,
+        SQLALCHEMY_DATABASE_URI=config.SQLALCHEMY_DATABASE_URI,
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        LSTM_MODEL_PATH=config.LSTM_MODEL_PATH,
     )
     if overrides:
         app.config.update(overrides)
+        
+    if app.config.get("TESTING") and (not overrides or "SQLALCHEMY_DATABASE_URI" not in overrides):
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    
+    # Initialize database
+    db.init_app(app)
+    
+    # Load LSTM sequence model
+    lstm_path = app.config.get("LSTM_MODEL_PATH")
+    try:
+        from ml_engine.lstm.infer import LSTMInfer
+        if Path(lstm_path).exists():
+            app.config["LSTM_INFER"] = LSTMInfer(lstm_path)
+            print(f"LSTM model loaded successfully from {lstm_path}")
+        else:
+            app.config["LSTM_INFER"] = None
+            print(f"Warning: LSTM model not found at {lstm_path}")
+    except Exception as e:
+        app.config["LSTM_INFER"] = None
+        print(f"Warning: Failed to load LSTM model: {e}")
+    
     CORS(app, resources={r"/api/*": {"origins": "*"}})
     app.register_blueprint(telemetry_bp)
     app.register_blueprint(incident_bp)

@@ -1,0 +1,38 @@
+{
+  "split_windows": {
+    "train": 3075,
+    "validation": 694,
+    "test": 1016
+  },
+  "split_sources": {
+    "train": 5,
+    "validation": 2,
+    "test": 2
+  },
+  "validation": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "roc_auc": 1.0,
+    "false_positive_rate": 0.0,
+    "true_positives": 27,
+    "false_positives": 0,
+    "true_negatives": 667,
+    "false_negatives": 0,
+    "detection_lead_time_seconds": null
+  },
+  "test": {
+    "precision": 1.0,
+    "recall": 0.9371428571428572,
+    "f1": 0.967551622418879,
+    "roc_auc": 0.995881595881596,
+    "false_positive_rate": 0.0,
+    "true_positives": 328,
+    "false_positives": 0,
+    "true_negatives": 666,
+    "false_negatives": 22,
+    "detection_lead_time_seconds": null
+  },
+  "detection_lead_times_seconds": {},
+  "note": "Detection lead time is null until each scenario includes a verified encryption-start timestamp; source-level splits prevent scenario leakage."
+}

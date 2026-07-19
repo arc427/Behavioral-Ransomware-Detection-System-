@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRDS-PEC | SOC Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <i data-lucide="shield-alert" style="color: var(--accent-mint); width: 28px; height: 28px;"></i>
+            <div>
+                <h1>BRDS-PEC</h1>
+            </div>
+            <span class="brand-badge">Pre-Encryption Containment</span>
+        </div>
+        <div class="system-status">
+            <div class="status-indicator">
+                <div class="dot pulse"></div>
+                <span>Sysmon Agent: Active</span>
+            </div>
+            <div class="status-indicator">
+                <label class="switch">
+                    <input type="checkbox" id="auto-contain-toggle" checked>
+                    <span class="slider"></span>
+                </label>
+                <span style="margin-left: 0.25rem;">Auto-Containment</span>
+            </div>
+            <div class="status-indicator">
+                <div id="containment-dot" class="dot"></div>
+                <span id="containment-status-text">Containment Engine: Active</span>
+            </div>
+            <div class="status-indicator">
+                <span style="font-family: monospace;">Host: BRDS-WIN11-SEC</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- Left Panel: Telemetry Stream -->
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <i data-lucide="activity"></i> Sysmon Telemetry Stream
+                </h2>
+                <span id="telemetry-rate" class="brand-badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border-color: rgba(255,255,255,0.05);">0 ev/s</span>
+            </div>
+            <div id="telemetry-log" class="panel-body">
+                <!-- Telemetry logs dynamically inserted here -->
+                <div class="telemetry-item" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                    <i data-lucide="loader-2" style="animation: spin 2s linear infinite; margin-bottom: 0.5rem;"></i>
+                    <p>Awaiting host telemetry stream...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Middle Panel: Risk Timeline & Alerts -->
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; min-height: 0;">
+            <!-- Metrics Row -->
+            <section class="metrics-row">
+                <div class="metric-card">
+                    <span class="metric-label">Analyzed Events</span>
+                    <span id="metric-total-events" class="metric-value">0</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Avg Risk Score</span>
+                    <span id="metric-avg-risk" class="metric-value mint">0.00</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Anomalies Screened</span>
+                    <span id="metric-anomalies" class="metric-value amber">0</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Active Incidents</span>
+                    <span id="metric-incidents" class="metric-value crimson">0</span>
+                </div>
+            </section>
+
+            <!-- Chart Panel -->
+            <section class="panel" style="flex: 2; min-height: 0;">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i data-lucide="trending-up"></i> Real-Time Threat Profile (Risk Curve)
+                    </h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <span class="brand-badge" style="color: var(--accent-amber); border-color: var(--accent-amber-glow); background: rgba(252, 163, 17, 0.05); text-transform: none;">Warning: 0.60</span>
+                        <span class="brand-badge" style="color: var(--accent-crimson); border-color: var(--accent-crimson-glow); background: rgba(255, 42, 95, 0.05); text-transform: none;">Contain: 0.85</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-container">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Panel: Incidents Log & Forensics -->
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title danger">
+                    <i data-lucide="zap"></i> Active Security Incidents
+                </h2>
+                <button id="clear-incidents-btn" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">Clear Log</button>
+            </div>
+            <div id="incident-list" class="panel-body">
+                <!-- Incidents dynamically inserted here -->
+                <div class="telemetry-item" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                    <i data-lucide="shield-check" style="color: var(--accent-mint); width: 36px; height: 36px; margin-bottom: 0.5rem;"></i>
+                    <p>No active threats detected.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SHAP Explainability Modal -->
+    <div id="xai-modal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i data-lucide="bar-chart-3"></i> Explainable AI (XAI) - SHAP Analysis
+                </h3>
+                <button id="modal-close-btn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="incident-details" style="background: rgba(0,0,0,0.15); padding: 1rem; border-radius: 6px;">
+                    <div><span class="detail-label">Incident ID:</span> <span id="xai-incident-id" class="detail-val">-</span></div>
+                    <div><span class="detail-label">Target Host:</span> <span id="xai-host" class="detail-val">-</span></div>
+                    <div><span class="detail-label">Detected Family:</span> <span id="xai-family" class="detail-val">-</span></div>
+                    <div><span class="detail-label">Risk Score:</span> <span id="xai-score" class="detail-val">-</span></div>
+                </div>
+                
+                <div class="xai-message">
+                    <p><strong>Baseline Model Interpretation:</strong> This chart illustrates the local feature importance generated for the classification output. Positive values (Crimson) push the system closer to containment, while negative values (Mint) indicate normal baseline behavior.</p>
+                </div>
+
+                <div class="shap-chart-stub">
+                    <h4 style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted);">Top Model Decision Features</h4>
+                    <div id="shap-bars-container">
+                        <!-- SHAP feature bars dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Spin animation utility style for awaiting state -->
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <!-- JS Scripts -->
+    <script src="js/xai_modal.js"></script>
+    <script src="js/risk_timeline.js"></script>
+    <script src="js/telemetry_stream.js"></script>
+    <script src="js/incident_log.js"></script>
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

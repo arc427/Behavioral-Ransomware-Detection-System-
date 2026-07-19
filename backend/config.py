@@ -11,3 +11,6 @@ TELEMETRY_PATH = PROCESSED_DIR / "sysmon_windows.csv"
 MODEL_PATH = MODEL_DIR / "baseline_models.joblib"
 REPORT_PATH = MODEL_DIR / "baseline_report.json"
 MAX_PAGE_SIZE = 1_000
+DATABASE_PATH = PROJECT_ROOT / "data" / "brds.db"
+SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATABASE_PATH}"
+LSTM_MODEL_PATH = MODEL_DIR / "lstm_model.pth"
