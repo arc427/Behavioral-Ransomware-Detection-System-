@@ -163,3 +163,12 @@ def test_lstm_shap_explainer_directly():
         assert len(attrs) == 2
         assert attrs[0]["feature_name"] in ["feat1", "feat2"]
         assert isinstance(attrs[0]["importance_value"], float)
+
+def test_api_explanation_pdf_download(app_client):
+    alert_id = "2026-07-19T04:10:00Z"
+    res = app_client.get(f'/api/explanations/{alert_id}/pdf')
+    assert res.status_code == 200
+    assert res.content_type == "application/pdf"
+    assert "attachment" in res.headers.get("Content-Disposition", "")
+    assert len(res.data) > 100
+

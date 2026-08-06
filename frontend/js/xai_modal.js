@@ -10,10 +10,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const familyVal = document.getElementById('xai-family');
     const scoreVal = document.getElementById('xai-score');
     
+    const downloadPdfBtn = document.getElementById('download-pdf-btn');
+    let currentIncidentId = null;
+    
     // Close modal
     closeBtn.addEventListener('click', () => {
         modal.classList.remove('show');
     });
+    
+    // Download PDF event
+    if (downloadPdfBtn) {
+        downloadPdfBtn.addEventListener('click', () => {
+            if (currentIncidentId) {
+                const pdfUrl = `/api/explanations/${encodeURIComponent(currentIncidentId)}/pdf`;
+                window.open(pdfUrl, '_blank');
+            }
+        });
+    }
     
     // Close on click outside modal container
     modal.addEventListener('click', (e) => {
@@ -92,6 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Expose function globally to trigger from incident_log
     window.showXAI = async (incident) => {
+        currentIncidentId = incident.id;
         // Populate header details
         idVal.innerText = incident.id;
         hostVal.innerText = incident.computer || 'BRDS-WIN11-SEC';
