@@ -314,5 +314,5 @@ def build_pdf(filename):
     print(f"Successfully generated PDF report at: {pdf_path}")
 
 if __name__ == '__main__':
-    target = sys.argv[1] if len(sys.argv) > 1 else "explainantion/BRDS_System_Technical_Report.pdf"
+    target = sys.argv[1] if len(sys.argv) > 1 else "docs/BRDS_System_Technical_Report.pdf"
     build_pdf(target)

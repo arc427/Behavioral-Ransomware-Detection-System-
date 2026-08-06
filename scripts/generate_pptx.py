@@ -91,7 +91,7 @@ def create_presentation(output_path):
     p_meta1.font.color.rgb = COLOR_TEXT_MUTED
 
     p_meta2 = tf_meta.add_paragraph()
-    p_meta2.text = "Evaluated Performance: 99.71% Validation Accuracy | 100% Recall | 25/25 Passing Unit Tests"
+    p_meta2.text = "Evaluated Performance: 99.51% F1 Score | 93.14% Unseen Attack Generalization | 29/29 Passing Unit Tests"
     p_meta2.font.size = Pt(12)
     p_meta2.font.bold = True
     p_meta2.font.color.rgb = COLOR_CYAN
@@ -323,10 +323,10 @@ def create_presentation(output_path):
     box_h = Inches(2.0)
 
     metrics = [
-        ("99.71%", "Validation Accuracy", "PyTorch LSTM Sequence Model", COLOR_ACCENT),
-        ("100.0%", "Detection Recall", "Zero False Negatives on Attack Windows", COLOR_CYAN),
-        ("98.69%", "Precision Score", "High Quality Alert Generation", COLOR_AMBER),
-        ("0.988", "ROC-AUC Score", "Excellent Binary Classification", COLOR_ACCENT)
+        ("99.51%", "F1 Score", "PyTorch LSTM & Baseline Models", COLOR_ACCENT),
+        ("99.48%", "Detection Recall", "Low False Negatives on Attack Windows", COLOR_CYAN),
+        ("97.31%", "Unseen Precision", "Leave-One-Scenario-Out Cross-Val", COLOR_AMBER),
+        ("93.14%", "Held-Out F1", "Generalization to Unseen Attack Types", COLOR_ACCENT)
     ]
 
     for idx, (val, label, sub, col) in enumerate(metrics):
