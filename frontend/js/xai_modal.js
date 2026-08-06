@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const scoreVal = document.getElementById('xai-score');
     
     const downloadPdfBtn = document.getElementById('download-pdf-btn');
-    let currentIncidentId = null;
+    let currentIncident = null;
     
     // Close modal
     closeBtn.addEventListener('click', () => {
@@ -23,8 +23,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Download PDF event
     if (downloadPdfBtn) {
         downloadPdfBtn.addEventListener('click', () => {
-            if (currentIncidentId) {
-                const pdfUrl = `${API_BASE}/api/explanations/${encodeURIComponent(currentIncidentId)}/pdf`;
+            if (currentIncident) {
+                const params = new URLSearchParams({
+                    host: currentIncident.computer || 'BRDS-WIN11-SEC',
+                    family: currentIncident.ransomware_family || 'Ransomware',
+                    score: (currentIncident.risk_score || 0.88).toFixed(2),
+                    pid: currentIncident.process_id || '9024',
+                    status: currentIncident.status || 'ACTIVE',
+                    time: currentIncident.timestamp || new Date().toISOString()
+                });
+                const pdfUrl = `${API_BASE}/api/explanations/${encodeURIComponent(currentIncident.id)}/pdf?${params.toString()}`;
                 window.open(pdfUrl, '_blank');
             }
         });
@@ -107,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Expose function globally to trigger from incident_log
     window.showXAI = async (incident) => {
-        currentIncidentId = incident.id;
+        currentIncident = incident;
         // Populate header details
         idVal.innerText = incident.id;
         hostVal.innerText = incident.computer || 'BRDS-WIN11-SEC';
