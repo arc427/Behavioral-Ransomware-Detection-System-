@@ -100,10 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let timeIndex = 0;
     
+    const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:5000' : '';
+
     // Fetch live telemetry from the backend API
     async function fetchTelemetry() {
         try {
-            const response = await fetch('/api/telemetry?limit=30');
+            const response = await fetch(`${API_BASE}/api/telemetry?limit=30`);
             const data = await response.json();
             
             if (data.items && data.items.length > 0) {

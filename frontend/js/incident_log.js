@@ -111,9 +111,11 @@ document.addEventListener("DOMContentLoaded", () => {
         metricIncidents.innerText = activeIncidents.length;
     }
 
+    const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:5000' : '';
+
     async function fetchAlerts() {
         try {
-            const response = await fetch('/api/alerts');
+            const response = await fetch(`${API_BASE}/api/alerts`);
             const data = await response.json();
             
             if (data.items && data.items.length > 0) {

@@ -18,11 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.remove('show');
     });
     
+    const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:5000' : '';
+
     // Download PDF event
     if (downloadPdfBtn) {
         downloadPdfBtn.addEventListener('click', () => {
             if (currentIncidentId) {
-                const pdfUrl = `/api/explanations/${encodeURIComponent(currentIncidentId)}/pdf`;
+                const pdfUrl = `${API_BASE}/api/explanations/${encodeURIComponent(currentIncidentId)}/pdf`;
                 window.open(pdfUrl, '_blank');
             }
         });
@@ -117,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Try fetching explanation from backend
         try {
-            const response = await fetch(`/api/explanations/${incident.id}`);
+            const response = await fetch(`${API_BASE}/api/explanations/${encodeURIComponent(incident.id)}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.available && data.attributions && data.attributions.length > 0) {

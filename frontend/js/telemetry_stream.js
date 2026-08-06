@@ -77,10 +77,12 @@ document.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons({attrs: {style: 'width: 12px; height: 12px; display: inline; vertical-align: middle; margin-right: 4px; color: var(--accent-mint);'}});
     }
 
+    const API_BASE = (window.location.protocol === 'file:') ? 'http://127.0.0.1:5000' : '';
+
     // Fetch telemetry from backend
     async function updateTelemetryStream() {
         try {
-            const response = await fetch('/api/telemetry?limit=15');
+            const response = await fetch(`${API_BASE}/api/telemetry?limit=15`);
             const data = await response.json();
             
             if (data.items && data.items.length > 0) {
