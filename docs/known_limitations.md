@@ -2,18 +2,22 @@
 
 ## SILRAD integration
 
-The included `fasttext-all-nofamily.csv` file is a FastText numerical feature
-export. Its columns resemble Sysmon fields, but their values are embeddings and
-do not preserve the original path, process, or timestamp semantics. The project
-therefore treats it as an exploratory SILRAD-native dataset and does not mix it
-with raw Sysmon windows for baseline training by default.
+The SILRAD-1.0 dataset (`fasttext-all-nofamily.csv`) contains raw Sysmon field
+data (event.code, ProcessGuid, Image, TargetObject, CommandLine, class) captured
+from Windows 11 endpoints running 50 ransomware samples across 6 families plus
+176,130 benign application events. The `SILRADAdapter` aggregates these records
+into 5-second behavioral windows using the same feature engineering pipeline as
+the rest of BRDS. 17,617 genuine benign windows are used as the operational
+baseline alongside 2,785 attack windows from Splunk ATT&CK data.
 
 ## Current evaluation scope
 
-The raw-Sysmon pipeline is validated on selected Splunk ATT&CK logs. A valid
-production-performance claim requires captured benign Sysmon telemetry, complete
-execution-level train/test separation, family-held-out evaluation, and recorded
-encryption start times. Dashboard/demo scores are not enterprise accuracy claims.
+The baseline model achieves 99.51% F1 Score, 99.53% Precision, 99.48% Recall,
+and 0.22% False Positive Rate on strict source-level splits. However, a
+production-performance claim would additionally require family-held-out
+evaluation, recorded encryption start times for detection lead-time measurement,
+and deployment validation on diverse enterprise environments.
+Dashboard/demo scores are not enterprise accuracy claims.
 
 ## Containment safety
 

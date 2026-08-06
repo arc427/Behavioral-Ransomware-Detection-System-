@@ -10,6 +10,7 @@ data/datasets/*
 *.sqlite
 *.db
 *.pt
+*.pth
 *.joblib
 
 # Python
