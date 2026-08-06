@@ -137,6 +137,80 @@ def train(dataset: pd.DataFrame, seed: int = 42, encryption_times: dict[str, str
     return artifacts, report
 
 
+def scenario_holdout_eval(dataset: pd.DataFrame, seed: int = 42) -> dict[str, object]:
+    """Leave-one-scenario-out cross-validation for attack generalization testing.
+
+    For each unique attack scenario, holds it out entirely from training,
+    trains on the remaining scenarios + all benign data, and evaluates
+    on the held-out attack scenario + a proportional benign sample.
+    """
+    from pipeline.vectorizer import vectorize as _vectorize
+
+    attack_scenarios = sorted(
+        dataset.loc[(dataset["label"] == 1) & (dataset["scenario"].notna()), "scenario"]
+        .unique()
+        .tolist()
+    )
+    if len(attack_scenarios) < 2:
+        return {"error": "Need at least 2 attack scenarios for held-out evaluation."}
+
+    results: dict[str, object] = {"scenarios": {}}
+    all_benign = dataset[dataset["label"] == 0]
+
+    for held_out in attack_scenarios:
+        # Test set: held-out attack scenario + proportional benign sample
+        test_attack = dataset[(dataset["label"] == 1) & (dataset["scenario"] == held_out)]
+        n_test_benign = min(len(all_benign), max(len(test_attack), 500))
+        rng = np.random.default_rng(seed)
+        test_benign = all_benign.sample(n=n_test_benign, random_state=rng.integers(2**31))
+        test_set = pd.concat([test_attack, test_benign], ignore_index=True)
+
+        # Train set: all other attack scenarios + remaining benign
+        train_attack = dataset[(dataset["label"] == 1) & (dataset["scenario"] != held_out)]
+        train_benign = all_benign.drop(test_benign.index)
+        train_set = pd.concat([train_attack, train_benign], ignore_index=True)
+
+        if train_set["label"].nunique() < 2 or test_set["label"].nunique() < 2:
+            results["scenarios"][held_out] = {"error": "Insufficient class diversity"}
+            continue
+
+        x_train, _ = _vectorize(train_set)
+        x_test, _ = _vectorize(test_set.reindex(columns=dataset.columns, fill_value=0))
+        y_train = train_set["label"].astype(int)
+        y_test = test_set["label"].astype(int)
+
+        model = Pipeline([
+            ("scale", StandardScaler()),
+            ("model", LogisticRegression(class_weight="balanced", max_iter=2000, random_state=seed))
+        ])
+        model.fit(x_train, y_train)
+        scores = model.predict_proba(x_test)[:, 1]
+
+        results["scenarios"][held_out] = {
+            "train_attack_windows": int(len(train_attack)),
+            "test_attack_windows": int(len(test_attack)),
+            "test_benign_windows": int(n_test_benign),
+            **metrics_for(y_test, scores),
+        }
+
+    # Compute averages
+    scenario_metrics = [v for v in results["scenarios"].values() if isinstance(v, dict) and "f1" in v]
+    if scenario_metrics:
+        results["average"] = {
+            "precision": float(np.mean([m["precision"] for m in scenario_metrics])),
+            "recall": float(np.mean([m["recall"] for m in scenario_metrics])),
+            "f1": float(np.mean([m["f1"] for m in scenario_metrics])),
+            "false_positive_rate": float(np.mean([m["false_positive_rate"] for m in scenario_metrics if m["false_positive_rate"] is not None])),
+        }
+    results["note"] = (
+        "Each scenario was held out entirely from training. "
+        "The model was trained on remaining attack scenarios + all benign data, "
+        "then tested on the held-out attack scenario. "
+        "This measures generalization to unseen attack patterns."
+    )
+    return results
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=ROOT / "data/processed/sysmon_attack_windows.csv")
@@ -144,6 +218,8 @@ def main() -> None:
     parser.add_argument("--report-output", type=Path, default=ROOT / "data/models/baseline_report.json")
     parser.add_argument("--encryption-times", type=Path, help="JSON object mapping attack source path to encryption-start ISO timestamp")
     parser.add_argument("--allow-proxy-representations", action="store_true", help="Permit a single non-raw representation for an explicitly labelled exploratory run")
+    parser.add_argument("--scenario-holdout", action="store_true", help="Run leave-one-scenario-out cross-validation")
+    parser.add_argument("--holdout-report-output", type=Path, default=ROOT / "data/models/scenario_holdout_report.json")
     args = parser.parse_args()
     dataset = pd.read_csv(args.input)
     encryption_times = json.loads(args.encryption_times.read_text(encoding="utf-8")) if args.encryption_times else None
@@ -155,6 +231,14 @@ def main() -> None:
     args.report_output.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))
 
+    if args.scenario_holdout:
+        print("\n--- Scenario Held-Out Cross-Validation ---")
+        holdout_report = scenario_holdout_eval(dataset)
+        args.holdout_report_output.write_text(json.dumps(holdout_report, indent=2), encoding="utf-8")
+        print(json.dumps(holdout_report, indent=2))
+        print(f"\nScenario holdout report saved to {args.holdout_report_output}")
+
 
 if __name__ == "__main__":
     main()
+

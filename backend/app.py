@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
 from backend import config
@@ -17,7 +17,11 @@ from backend.models import db
 
 
 def create_app(overrides: dict | None = None) -> Flask:
-    app = Flask(__name__)
+    # Resolve the frontend directory for static file serving
+    _project_root = Path(__file__).resolve().parents[1]
+    _frontend_dir = _project_root / "frontend"
+
+    app = Flask(__name__, static_folder=str(_frontend_dir), static_url_path="/static")
     app.config.from_mapping(
         ALERTS_PATH=config.ALERTS_PATH,
         TELEMETRY_PATH=config.TELEMETRY_PATH,
@@ -84,6 +88,16 @@ def create_app(overrides: dict | None = None) -> Flask:
             "artifacts": {key.lower().replace("_path", ""): path.exists() for key, path in paths.items()},
             "containment_enabled": False
         })
+
+    @app.get("/")
+    def serve_dashboard():
+        """Serve the SOC dashboard at the root URL."""
+        return send_from_directory(str(_frontend_dir), "index.html")
+
+    @app.get("/<path:filename>")
+    def serve_frontend_files(filename):
+        """Serve CSS, JS, and other frontend assets."""
+        return send_from_directory(str(_frontend_dir), filename)
 
     return app
 

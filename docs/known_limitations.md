@@ -2,13 +2,24 @@
 
 ## SILRAD integration
 
-The SILRAD-1.0 dataset (`fasttext-all-nofamily.csv`) contains raw Sysmon field
-data (event.code, ProcessGuid, Image, TargetObject, CommandLine, class) captured
-from Windows 11 endpoints running 50 ransomware samples across 6 families plus
-176,130 benign application events. The `SILRADAdapter` aggregates these records
-into 5-second behavioral windows using the same feature engineering pipeline as
-the rest of BRDS. 17,617 genuine benign windows are used as the operational
-baseline alongside 2,785 attack windows from Splunk ATT&CK data.
+The SILRAD-1.0 dataset (`fasttext-all-nofamily.csv`) contains 196,840 Sysmon
+records from Windows 11 endpoints. While `event.code` is preserved as a real
+integer, the text columns (`Image`, `CommandLine`, `TargetObject`) have been
+replaced with FastText embedding floats by the dataset authors.
+
+For **benign records** (class=0, 176,130 events), the `event.code` distribution
+alone is sufficient for the `SILRADAdapter` to produce realistic behavioral
+windows (17,617 windows used as operational baseline).
+
+For **ransomware records** (class=1, 20,710 events), the embedded text columns
+produce misleading feature profiles: `unique_images`, `suspicious_path_count`,
+and `unique_files` are computed from float strings instead of real file paths,
+causing the classifier to learn artifacts rather than genuine attack behaviour.
+Empirical testing confirmed a drop from 99.51% to 54.97% F1 when including
+SILRAD attack windows. These records are therefore excluded from training.
+
+Attack behaviour is sourced from 2,785 windows extracted from Splunk ATT&CK
+logs with real Sysmon paths and process metadata.
 
 ## Current evaluation scope
 

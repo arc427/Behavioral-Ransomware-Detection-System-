@@ -1,0 +1,71 @@
+{
+  "scenarios": {
+    "atomic_red_team": {
+      "train_attack_windows": 754,
+      "test_attack_windows": 2031,
+      "test_benign_windows": 2031,
+      "precision": 0.9978260869565218,
+      "recall": 0.9039881831610044,
+      "f1": 0.9485920950658745,
+      "roc_auc": 0.9937618804153543,
+      "false_positive_rate": 0.0019694731659281144,
+      "true_positives": 1836,
+      "false_positives": 4,
+      "true_negatives": 2027,
+      "false_negatives": 195,
+      "detection_lead_time_seconds": null
+    },
+    "dcrypt": {
+      "train_attack_windows": 2772,
+      "test_attack_windows": 13,
+      "test_benign_windows": 500,
+      "precision": 0.9,
+      "recall": 0.6923076923076923,
+      "f1": 0.782608695652174,
+      "roc_auc": 0.7744615384615385,
+      "false_positive_rate": 0.002,
+      "true_positives": 9,
+      "false_positives": 1,
+      "true_negatives": 499,
+      "false_negatives": 4,
+      "detection_lead_time_seconds": null
+    },
+    "ransomware_notes": {
+      "train_attack_windows": 2394,
+      "test_attack_windows": 391,
+      "test_benign_windows": 500,
+      "precision": 0.9974424552429667,
+      "recall": 0.9974424552429667,
+      "f1": 0.9974424552429667,
+      "roc_auc": 0.9998209718670077,
+      "false_positive_rate": 0.002,
+      "true_positives": 390,
+      "false_positives": 1,
+      "true_negatives": 499,
+      "false_negatives": 1,
+      "detection_lead_time_seconds": null
+    },
+    "sam_sam_note": {
+      "train_attack_windows": 2435,
+      "test_attack_windows": 350,
+      "test_benign_windows": 500,
+      "precision": 0.9971428571428571,
+      "recall": 0.9971428571428571,
+      "f1": 0.9971428571428571,
+      "roc_auc": 0.999822857142857,
+      "false_positive_rate": 0.002,
+      "true_positives": 349,
+      "false_positives": 1,
+      "true_negatives": 499,
+      "false_negatives": 1,
+      "detection_lead_time_seconds": null
+    }
+  },
+  "average": {
+    "precision": 0.9731028498355865,
+    "recall": 0.8977202969636302,
+    "f1": 0.9314465257759681,
+    "false_positive_rate": 0.0019923682914820286
+  },
+  "note": "Each scenario was held out entirely from training. The model was trained on remaining attack scenarios + all benign data, then tested on the held-out attack scenario. This measures generalization to unseen attack patterns."
+}
