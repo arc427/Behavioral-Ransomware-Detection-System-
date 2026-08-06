@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const timestamp = new Date(incident.timestamp || Date.now()).toLocaleTimeString();
         const score = (incident.risk_score || 0.88).toFixed(2);
+        const isContained = Boolean(incident.status && incident.status.includes('CONTAINED'));
         
         card.innerHTML = `
             <div class="incident-header">
@@ -28,12 +29,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="incident-details">
                 <div><span class="detail-label">Time:</span> <span class="detail-val">${timestamp}</span></div>
                 <div><span class="detail-label">Host:</span> <span class="detail-val">${incident.computer || 'BRDS-WIN11-SEC'}</span></div>
-                <div><span class="detail-label">Status:</span> <span id="status-${incident.id}" class="detail-val" style="color: ${incident.status === 'CONTAINED' ? 'var(--accent-mint)' : 'var(--accent-crimson)'}">${incident.status || 'ACTIVE'}</span></div>
+                <div><span class="detail-label">Status:</span> <span id="status-${incident.id}" class="detail-val" style="color: ${isContained ? 'var(--accent-mint)' : 'var(--accent-crimson)'}">${incident.status || 'ACTIVE'}</span></div>
                 <div><span class="detail-label">Process ID:</span> <span class="detail-val">${incident.process_id || '9024'}</span></div>
             </div>
             <div class="incident-actions">
                 <button class="btn btn-primary xai-btn">SHAP Analysis</button>
-                ${incident.status !== 'CONTAINED' ? `<button class="btn btn-danger isolate-btn">Isolate Host</button>` : ''}
+                ${!isContained ? `<button class="btn btn-danger isolate-btn">Isolate Host</button>` : ''}
             </div>
         `;
         
