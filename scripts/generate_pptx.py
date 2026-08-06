@@ -477,3 +477,8 @@ def create_presentation(output_path):
 if __name__ == '__main__':
     target = sys.argv[1] if len(sys.argv) > 1 else "docs/BRDS_Project_Presentation.pptx"
     create_presentation(target)
+    # Also save copy in explanations/ folder
+    exp_target = "explanations/BRDS_Project_Presentation.pptx"
+    import shutil
+    shutil.copy(target, exp_target)
+    print(f"Successfully synced presentation to: {exp_target}")

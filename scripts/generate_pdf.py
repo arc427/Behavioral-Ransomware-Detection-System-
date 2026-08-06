@@ -316,3 +316,8 @@ def build_pdf(filename):
 if __name__ == '__main__':
     target = sys.argv[1] if len(sys.argv) > 1 else "docs/BRDS_System_Technical_Report.pdf"
     build_pdf(target)
+    # Also save copy in explanations/ folder
+    exp_target = "explanations/BRDS_System_Technical_Report.pdf"
+    import shutil
+    shutil.copy(target, exp_target)
+    print(f"Successfully synced PDF report to: {exp_target}")
