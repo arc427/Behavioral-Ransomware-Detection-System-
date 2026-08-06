@@ -110,3 +110,14 @@ def test_api_alerts_db_query(app_client):
     assert data["items"][0]["id"] == "INC-1"
     assert data["items"][0]["ransomware_family"] == "T1486"
     assert data["items"][0]["risk_score"] == 0.98
+
+def test_sql_like_escaping(app_client):
+    from backend.routes.telemetry_routes import _safe_like
+    assert _safe_like("test%user_name") == "test\\%user\\_name"
+    assert _safe_like("normal_host") == "normal\\_host"
+    
+    # Query with literal % wildcard: should match zero rows when host does not contain explicit %
+    res = app_client.get('/api/telemetry?host=%')
+    assert res.status_code == 200
+    data = json.loads(res.data)
+    assert data["total"] == 0

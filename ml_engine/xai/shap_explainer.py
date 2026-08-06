@@ -78,3 +78,94 @@ class SHAPExplainer:
         # Sort by absolute importance value descending
         attributions.sort(key=lambda x: abs(x["importance_value"]), reverse=True)
         return attributions
+
+
+import torch
+
+class LSTMSHAPExplainer:
+    """Computes gradient-based feature attributions for PyTorch LSTM sequence classification."""
+    
+    def __init__(self, lstm_infer):
+        self.lstm_infer = lstm_infer
+
+    def explain(self, sequence_df) -> list[dict]:
+        """Compute integrated gradient / feature attribution for an LSTM sequence.
+        
+        Args:
+            sequence_df: pandas DataFrame or dict containing window telemetry.
+        Returns:
+            list[dict]: Sorted list of feature attributions (feature_name, importance_value).
+        """
+        import pandas as pd
+        if isinstance(sequence_df, dict):
+            df = pd.DataFrame([sequence_df])
+        else:
+            df = sequence_df.copy()
+            
+        # 1. Try SHAP GradientExplainer
+        try:
+            import shap
+            features_raw = df.reindex(columns=self.lstm_infer.feature_names, fill_value=0.0).fillna(0.0).values
+            if self.lstm_infer.scaler is not None:
+                features_scaled = self.lstm_infer.scaler.transform(features_raw)
+            else:
+                features_scaled = features_raw
+                
+            # Target 30 steps sequence
+            seq_len = 30
+            if len(features_scaled) > seq_len:
+                features_scaled = features_scaled[-seq_len:]
+            elif len(features_scaled) < seq_len:
+                missing_steps = seq_len - len(features_scaled)
+                mean_vec = np.mean(features_scaled, axis=0) if len(features_scaled) > 0 else np.zeros(self.lstm_infer.input_dim)
+                padding = np.tile(mean_vec, (missing_steps, 1))
+                features_scaled = np.vstack((padding, features_scaled))
+                
+            input_tensor = torch.tensor(features_scaled, dtype=torch.float32).unsqueeze(0)
+            background_tensor = torch.zeros((1, seq_len, self.lstm_infer.input_dim))
+            
+            explainer = shap.GradientExplainer(self.lstm_infer.model, background_tensor)
+            shap_values = explainer.shap_values(input_tensor)
+            if isinstance(shap_values, list):
+                shap_values = shap_values[0]
+            if len(shap_values.shape) == 3:
+                shap_values = shap_values[0]
+                
+            # Average absolute feature importance across all sequence timesteps
+            mean_importance = np.abs(shap_values).mean(axis=0)
+            attributions = [
+                {"feature_name": name, "importance_value": float(np.asarray(val).flatten()[0])}
+                for name, val in zip(self.lstm_infer.feature_names, mean_importance)
+            ]
+        except Exception:
+            # 2. PyTorch Gradient * Input attribution fallback
+            self.lstm_infer.model.eval()
+            features_raw = df.reindex(columns=self.lstm_infer.feature_names, fill_value=0.0).fillna(0.0).values
+            if self.lstm_infer.scaler is not None:
+                features_scaled = self.lstm_infer.scaler.transform(features_raw)
+            else:
+                features_scaled = features_raw
+                
+            seq_len = 30
+            if len(features_scaled) > seq_len:
+                features_scaled = features_scaled[-seq_len:]
+            elif len(features_scaled) < seq_len:
+                missing_steps = seq_len - len(features_scaled)
+                mean_vec = np.mean(features_scaled, axis=0) if len(features_scaled) > 0 else np.zeros(self.lstm_infer.input_dim)
+                padding = np.tile(mean_vec, (missing_steps, 1))
+                features_scaled = np.vstack((padding, features_scaled))
+                
+            input_tensor = torch.tensor(features_scaled, dtype=torch.float32).unsqueeze(0).requires_grad_(True)
+            output = self.lstm_infer.model(input_tensor)
+            output.backward()
+            
+            grads = input_tensor.grad.detach().numpy()[0] # (seq_len, input_dim)
+            grad_x_input = np.abs(grads * features_scaled).mean(axis=0)
+            
+            attributions = [
+                {"feature_name": name, "importance_value": float(np.asarray(val).flatten()[0])}
+                for name, val in zip(self.lstm_infer.feature_names, grad_x_input)
+            ]
+            
+        attributions.sort(key=lambda x: abs(x["importance_value"]), reverse=True)
+        return attributions

@@ -15,8 +15,8 @@ class LSTMClassifier(nn.Module):
             bidirectional=True,
             dropout=dropout if num_layers > 1 else 0.0
         )
-        # Bidirectional LSTM outputs hidden_dim * 2
-        self.fc = nn.Linear(hidden_dim * 2, 1)
+        # Bidirectional LSTM outputs hidden_dim * 2; Mean + Max pooling outputs hidden_dim * 4
+        self.fc = nn.Linear(hidden_dim * 4, 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -33,13 +33,14 @@ class LSTMClassifier(nn.Module):
         # Shape: (batch_size, seq_len, hidden_dim * 2)
         lstm_out, _ = self.lstm(projected)
         
-        # Extract features from the final time-step of the sequence
-        # Shape: (batch_size, hidden_dim * 2)
-        final_state = lstm_out[:, -1, :]
+        # Mean and Max pooling across all sequence timesteps
+        # Mean pool captures average activity; Max pool captures peak threat intensity at any step
+        mean_pool = lstm_out.mean(dim=1)
+        max_pool = lstm_out.max(dim=1).values
+        pooled = torch.cat([mean_pool, max_pool], dim=1) # Shape: (batch_size, hidden_dim * 4)
         
         # Class logits and Sigmoid activation
-        # Shape: (batch_size, 1)
-        logits = self.fc(final_state)
+        logits = self.fc(pooled)
         probabilities = self.sigmoid(logits)
         
         return probabilities

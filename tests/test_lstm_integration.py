@@ -32,9 +32,11 @@ def app_client():
     from ml_engine.lstm.model import LSTMClassifier
     model = LSTMClassifier(input_dim=17, hidden_dim=8, num_layers=1, dropout=0.0)
     
+    import joblib
+    import hashlib
+
     checkpoint = {
         "model_state_dict": model.state_dict(),
-        "scaler": scaler,
         "feature_names": [
             'event_count', 'unique_images', 'unique_files', 'unique_extensions',
             'unique_destination_ips', 'suspicious_path_count', 'file_activity_count',
@@ -48,6 +50,13 @@ def app_client():
         "dropout": 0.0
     }
     torch.save(checkpoint, lstm_path)
+    
+    # Save sidecar scaler and sha256 manifest
+    scaler_path = Path(lstm_path).with_suffix('.scaler.joblib')
+    joblib.dump(scaler, scaler_path)
+    
+    hash_path = Path(lstm_path).with_suffix('.sha256')
+    hash_path.write_text(hashlib.sha256(Path(lstm_path).read_bytes()).hexdigest(), encoding="utf-8")
     
     alerts_fd, alerts_path = tempfile.mkstemp(suffix=".json")
     os.close(alerts_fd)
@@ -78,6 +87,32 @@ def app_client():
         os.remove(alerts_path)
     except OSError:
         pass
+
+def test_api_key_authentication(app_client):
+    # Configure API Key on application context
+    app_client.application.config["BRDS_API_KEY"] = "secret-test-key-12345"
+    
+    payload = {
+        "computer": "TEST-HOST",
+        "window_start": "2026-07-19T04:20:00Z",
+        "features": {}
+    }
+    
+    # 1. Missing header -> 401 Unauthorized
+    res_missing = app_client.post('/api/score/live', json=payload)
+    assert res_missing.status_code == 401
+    assert "Unauthorized" in res_missing.get_json()["error"]
+    
+    # 2. Invalid key header -> 401 Unauthorized
+    res_invalid = app_client.post('/api/score/live', json=payload, headers={"X-BRDS-API-Key": "wrong-key"})
+    assert res_invalid.status_code == 401
+    
+    # 3. Valid key header -> 200 OK
+    res_valid = app_client.post('/api/score/live', json=payload, headers={"X-BRDS-API-Key": "secret-test-key-12345"})
+    assert res_valid.status_code == 200
+    
+    # Clean up config key
+    app_client.application.config["BRDS_API_KEY"] = None
 
 def test_lstm_live_scoring_low_risk(app_client):
     # Ingest benign telemetry window (all zero features)
@@ -171,9 +206,10 @@ def test_lstm_live_scoring_high_risk(app_client):
         assert incidents[0].ransomware_family == "T1486"
         assert incidents[0].status == "ACTIVE"
         
-        # Verify it appended alert to JSON path
+        # Verify it appended alert to JSON path securely
+        from containment.alert_integrity import verify_and_load
         alerts_path = Path(app_client.application.config["ALERTS_PATH"])
-        alerts = json.loads(alerts_path.read_text(encoding="utf-8"))
+        alerts = verify_and_load(alerts_path)
         assert len(alerts) == 1
         assert alerts[0]["computer"] == "TEST-HOST-ATTACK"
         assert alerts[0]["technique_id"] == "T1486"

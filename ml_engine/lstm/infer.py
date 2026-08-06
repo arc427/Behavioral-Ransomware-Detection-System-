@@ -4,13 +4,37 @@ import numpy as np
 from pathlib import Path
 from ml_engine.lstm.model import LSTMClassifier
 
+import hashlib
+import joblib
+
 class LSTMInfer:
-    """Wrapper class to load trained LSTM model and run real-time inference."""
+    """Wrapper class to load trained LSTM model securely and run real-time inference."""
     
     def __init__(self, model_path: str | Path):
-        checkpoint = torch.load(model_path, map_location=torch.device('cpu'), weights_only=False)
+        path = Path(model_path)
+        
+        # Verify SHA-256 checksum if hash manifest exists
+        hash_path = path.with_suffix('.sha256')
+        if hash_path.exists():
+            expected_hash = hash_path.read_text(encoding="utf-8").strip()
+            actual_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+            if actual_hash != expected_hash:
+                raise RuntimeError(
+                    f"Model checkpoint integrity check failed! File: {path}\n"
+                    f"Expected SHA-256: {expected_hash}\nActual SHA-256: {actual_hash}"
+                )
+                
+        # Secure deserialization: load tensors only to prevent RCE
+        checkpoint = torch.load(path, map_location=torch.device('cpu'), weights_only=True)
         self.feature_names = checkpoint['feature_names']
-        self.scaler = checkpoint['scaler']
+        
+        # Load scaler from sidecar file or fallback
+        scaler_path = path.with_suffix('.scaler.joblib')
+        if scaler_path.exists():
+            self.scaler = joblib.load(scaler_path)
+        else:
+            self.scaler = checkpoint.get('scaler', None)
+            
         self.input_dim = checkpoint['input_dim']
         self.hidden_dim = checkpoint.get('hidden_dim', 64)
         self.num_layers = checkpoint.get('num_layers', 2)
@@ -54,8 +78,13 @@ class LSTMInfer:
             # Take the latest 30 steps
             features_scaled = features_scaled[-seq_len:]
         elif len(features_scaled) < seq_len:
-            # Pad front with zeros if sequence is short
-            padding = np.zeros((seq_len - len(features_scaled), self.input_dim))
+            # Front-pad short sequences with feature mean vector to prevent artificially depressing risk scores
+            missing_steps = seq_len - len(features_scaled)
+            if len(features_scaled) > 0:
+                mean_vec = np.mean(features_scaled, axis=0)
+            else:
+                mean_vec = np.zeros(self.input_dim)
+            padding = np.tile(mean_vec, (missing_steps, 1))
             features_scaled = np.vstack((padding, features_scaled))
             
         # Convert to tensor and insert batch dimension: shape (1, 30, input_dim)

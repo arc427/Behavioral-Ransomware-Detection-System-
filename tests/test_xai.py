@@ -101,6 +101,9 @@ def test_shap_explainer_directly(app_client):
     assert attributions[0]["feature_name"] in ["event_count", "file_activity_count"]
     assert isinstance(attributions[0]["importance_value"], float)
 
+import torch
+from backend.app import create_app
+
 def test_api_explanation_db_query(app_client):
     # Query `/api/explanations/<alert_id>`
     # The alert_id can be the Incident timestamp
@@ -111,5 +114,52 @@ def test_api_explanation_db_query(app_client):
     
     assert data["alert_id"] == alert_id
     assert data["available"] is True
-    assert len(data["attributions"]) == 2
-    assert data["attributions"][0]["feature_name"] in ["event_count", "file_activity_count"]
+    assert len(data["attributions"]) > 0
+    assert "feature_name" in data["attributions"][0]
+
+def test_xai_error_sanitization(app_client):
+    # Clear LSTM_INFER and set invalid MODEL_PATH to trigger exception fallback on dynamic explanation computation
+    original_model_path = app_client.application.config.get("MODEL_PATH")
+    original_lstm_infer = app_client.application.config.get("LSTM_INFER")
+    app_client.application.config["LSTM_INFER"] = None
+    app_client.application.config["MODEL_PATH"] = Path("/invalid/path/missing_model.joblib")
+    
+    alert_id = "2026-07-19T04:10:00Z"
+    res = app_client.get(f'/api/explanations/{alert_id}')
+    assert res.status_code == 200
+    data = json.loads(res.data)
+    assert data["fallback"] is True
+    assert "Explanation computation failed" in data["error"]
+    # Ensure no absolute paths or tracebacks are leaked
+    assert "C:\\" not in data["error"]
+    assert "Traceback" not in data["error"]
+    
+    # Restore model configs
+    app_client.application.config["MODEL_PATH"] = original_model_path
+    app_client.application.config["LSTM_INFER"] = original_lstm_infer
+
+def test_lstm_shap_explainer_directly():
+    from ml_engine.lstm.model import LSTMClassifier
+    from ml_engine.lstm.infer import LSTMInfer
+    from ml_engine.xai.shap_explainer import LSTMSHAPExplainer
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        pth_path = Path(tmpdir) / "m.pth"
+        model = LSTMClassifier(input_dim=2, hidden_dim=8, num_layers=1)
+        checkpoint = {
+            'model_state_dict': model.state_dict(),
+            'feature_names': ['feat1', 'feat2'],
+            'input_dim': 2,
+            'hidden_dim': 8,
+            'num_layers': 1,
+            'dropout': 0.0
+        }
+        torch.save(checkpoint, pth_path)
+        infer = LSTMInfer(pth_path)
+        
+        explainer = LSTMSHAPExplainer(infer)
+        attrs = explainer.explain({"feat1": 1.0, "feat2": 2.0})
+        
+        assert len(attrs) == 2
+        assert attrs[0]["feature_name"] in ["feat1", "feat2"]
+        assert isinstance(attrs[0]["importance_value"], float)

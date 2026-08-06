@@ -58,9 +58,11 @@ def test_lstm_infer():
     
     model = LSTMClassifier(input_dim=2, hidden_dim=8, num_layers=1)
     
+    import joblib
+    import hashlib
+
     checkpoint = {
         'model_state_dict': model.state_dict(),
-        'scaler': scaler,
         'feature_names': ['feat1', 'feat2'],
         'input_dim': 2,
         'hidden_dim': 8,
@@ -72,6 +74,13 @@ def test_lstm_infer():
     with tempfile.TemporaryDirectory() as tmpdir:
         checkpoint_path = Path(tmpdir) / "test_lstm_model.pth"
         torch.save(checkpoint, checkpoint_path)
+        
+        # Save sidecar scaler and sha256 manifest
+        scaler_path = checkpoint_path.with_suffix('.scaler.joblib')
+        joblib.dump(scaler, scaler_path)
+        
+        hash_path = checkpoint_path.with_suffix('.sha256')
+        hash_path.write_text(hashlib.sha256(checkpoint_path.read_bytes()).hexdigest(), encoding="utf-8")
         
         # Initialize inference engine
         infer = LSTMInfer(checkpoint_path)

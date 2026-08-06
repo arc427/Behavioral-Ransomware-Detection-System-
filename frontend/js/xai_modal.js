@@ -106,8 +106,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`/api/explanations/${incident.id}`);
             if (response.ok) {
                 const data = await response.json();
-                if (data.available && data.features) {
-                    renderSHAPBars(data.features);
+                if (data.available && data.attributions && data.attributions.length > 0) {
+                    const formatted = data.attributions.map(attr => ({
+                        feature: attr.feature_name,
+                        value: attr.importance_value,
+                        isPositive: attr.importance_value >= 0
+                    }));
+                    renderSHAPBars(formatted);
                     return;
                 }
             }

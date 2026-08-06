@@ -8,9 +8,9 @@ This directory contains the automated threat mitigation modules for the Behavior
 
 To prevent accidental host lockouts, remote session drops, or process crashes on developer machines, the containment engine implements a default **Dry-Run Mode**.
 
-### 1. Dry-Run Mode (Default Safety)
+### 1. Dry-Run Mode (Current Project Build)
 
-By default, the environment variable `BRDS_DRY_RUN` is set to `1` (or undefined).
+The containment scripts are intentionally locked to dry-run mode in this build.
 
 - **Behavior**: When a ransomware alert with a risk score $\ge 0.85$ is detected, the trigger daemon passes the `-DryRun` flag to both PowerShell scripts.
 - **Result**: The scripts **log their intended actions** to the terminal and database without executing them:
@@ -18,22 +18,13 @@ By default, the environment variable `BRDS_DRY_RUN` is set to `1` (or undefined)
   - _Process tree_: Logs `"DRY RUN: Terminating process tree for PID 4820"` but does **not** kill it.
   - _Purpose_: Allows you to test the entire ingestion, scoring, and daemon pipeline safely on your local host without losing connection.
 
-### 2. Live Containment Mode (Real Threat Isolation)
+### 2. Live Containment
 
-To arm the system for actual threat isolation (e.g., inside your sandbox VM), you must explicitly turn off dry-run safety:
-
-```powershell
-# Set environment variable to 0 in your terminal session
-$env:BRDS_DRY_RUN = "0"
-
-# Run the daemon
-python containment/trigger_daemon.py
-```
-
-- **Behavior**: The daemon calls the PowerShell containment scripts without the `-DryRun` flag.
-- **Result**: **Live execution takes place immediately**:
-  - **Process Tree Collapse**: `kill_process_tree.ps1` runs WMI/CIM queries to terminate the ransomware binary and all child processes it spawned, halting encryption in progress.
-  - **Host Isolation**: `ContainHost.ps1` runs `Disable-NetAdapter` to turn off all network adapters (Ethernet, Wi-Fi, virtual adapters), severing the network connection to block the ransomware from spreading laterally to servers or domain controllers.
+Live containment is **not implemented in this project build**. The former
+`-Armed` path is deliberately ignored to prevent a direct PowerShell invocation
+from disabling network adapters or terminating processes. A future production
+service must independently verify authorization, use an approved incident
+response workflow, and be validated only in an isolated VM.
 
 ---
 

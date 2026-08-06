@@ -5,7 +5,10 @@ from __future__ import annotations
 import pandas as pd
 
 
-IDENTIFIER_COLUMNS = frozenset({"computer", "process_key", "window_start", "label", "technique_id", "scenario", "source"})
+IDENTIFIER_COLUMNS = frozenset({
+    "computer", "process_key", "window_start", "label", "technique_id", "scenario",
+    "source", "source_kind", "dataset_source", "representation",
+})
 
 
 def feature_columns(frame: pd.DataFrame) -> list[str]:

@@ -1,36 +1,42 @@
 {
   "split_windows": {
-    "train": 3075,
-    "validation": 694,
-    "test": 1016
+    "train": 11268,
+    "validation": 3876,
+    "test": 5258
   },
   "split_sources": {
-    "train": 5,
+    "train": 7,
     "validation": 2,
     "test": 2
   },
+  "dataset_sources": [
+    "silrad"
+  ],
+  "representations": [
+    "raw_sysmon"
+  ],
   "validation": {
-    "precision": 1.0,
-    "recall": 1.0,
-    "f1": 1.0,
-    "roc_auc": 1.0,
-    "false_positive_rate": 0.0,
-    "true_positives": 27,
-    "false_positives": 0,
-    "true_negatives": 667,
-    "false_negatives": 0,
+    "precision": 0.9803370786516854,
+    "recall": 0.9971428571428571,
+    "f1": 0.9886685552407932,
+    "roc_auc": 0.9995697269265051,
+    "false_positive_rate": 0.0019852524106636414,
+    "true_positives": 349,
+    "false_positives": 7,
+    "true_negatives": 3519,
+    "false_negatives": 1,
     "detection_lead_time_seconds": null
   },
   "test": {
-    "precision": 1.0,
-    "recall": 0.9371428571428572,
-    "f1": 0.967551622418879,
-    "roc_auc": 0.995881595881596,
-    "false_positive_rate": 0.0,
-    "true_positives": 328,
-    "false_positives": 0,
-    "true_negatives": 666,
-    "false_negatives": 22,
+    "precision": 0.9953890489913545,
+    "recall": 0.994815668202765,
+    "f1": 0.9951022760011524,
+    "roc_auc": 0.998692550054038,
+    "false_positive_rate": 0.002271436683702442,
+    "true_positives": 1727,
+    "false_positives": 8,
+    "true_negatives": 3514,
+    "false_negatives": 9,
     "detection_lead_time_seconds": null
   },
   "detection_lead_times_seconds": {},

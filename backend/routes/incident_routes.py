@@ -7,7 +7,7 @@ from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, request
 
-from .telemetry_routes import _page_args
+from .telemetry_routes import _page_args, _safe_like
 
 
 from backend.models.incidents import Incident
@@ -18,15 +18,16 @@ from sqlalchemy.exc import OperationalError
 incident_bp = Blueprint("incidents", __name__)
 
 
+from containment.alert_integrity import verify_and_load
+
 def _alerts() -> list[dict]:
     path = Path(current_app.config["ALERTS_PATH"])
     if not path.exists():
         return []
     try:
-        content = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        return verify_and_load(path)
+    except Exception:
         return []
-    return content if isinstance(content, list) else []
 
 
 @incident_bp.get("/api/alerts")
@@ -45,7 +46,7 @@ def alerts():
                                    ("technique", Incident.ransomware_family)):
             value = request.args.get(query_name)
             if value:
-                query = query.filter(field.ilike(f"%{value}%"))
+                query = query.filter(field.ilike(f"%{_safe_like(value)}%", escape="\\"))
                 
         try:
             minimum_risk = float(request.args.get("min_risk", 0.0))

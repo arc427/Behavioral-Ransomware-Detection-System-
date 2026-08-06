@@ -36,8 +36,16 @@ def explanation(alert_id: str):
         if not vector:
             return jsonify({"alert_id": alert_id, "available": False, "message": "Telemetry feature vector not found."}), 404
             
-        # 3. Compute explanations dynamically
-        explainer = SHAPExplainer(current_app.config.get("MODEL_PATH"))
+        # 3. Compute explanations dynamically using Neural LSTM explainer or Linear baseline
+        lstm_infer = current_app.config.get("LSTM_INFER")
+        if lstm_infer:
+            from ml_engine.xai.shap_explainer import LSTMSHAPExplainer
+            explainer = LSTMSHAPExplainer(lstm_infer)
+            explanation_source = "lstm_gradient"
+        else:
+            explainer = SHAPExplainer(current_app.config.get("MODEL_PATH"))
+            explanation_source = "lr_baseline"
+            
         attributions = explainer.explain(vector.to_dict())
         
         # Save computed attributions to SQL database
@@ -55,9 +63,11 @@ def explanation(alert_id: str):
         return jsonify({
             "alert_id": alert_id,
             "available": True,
+            "explanation_source": explanation_source,
             "attributions": attributions
         })
     except Exception as e:
+        current_app.logger.exception("XAI explanation computation failed for alert_id=%s", alert_id)
         # Fallback if SQLite/model is not initialized: return mock explanations to keep frontend active
         mock_attributions = [
             {"feature_name": "file_activity_count", "importance_value": 0.45},
@@ -70,5 +80,5 @@ def explanation(alert_id: str):
             "available": True,
             "attributions": mock_attributions,
             "fallback": True,
-            "error": str(e)
+            "error": "Explanation computation failed. Contact your SOC administrator."
         })

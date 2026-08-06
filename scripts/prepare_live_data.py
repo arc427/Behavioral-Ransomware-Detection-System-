@@ -28,62 +28,77 @@ df_attack = pd.read_csv(attack_path)
 n_attack = len(df_attack)
 print(f"Loaded {n_attack} attack windows.")
 
-# 2. Synthesize Benign Windows (label 0)
-# We will create 2000 benign windows. Benign system traffic has very low activity rates.
-n_benign = 2000
-rng = np.random.default_rng(42)
-
-# Get feature columns (all columns that are not administrative metadata)
+# Define metadata and feature columns
 meta_cols = ['computer', 'process_key', 'window_start', 'label', 'technique_id', 'scenario', 'source']
 feature_cols = [c for c in df_attack.columns if c not in meta_cols]
 
-benign_rows = []
-system_processes = [
-    r"C:\Windows\System32\svchost.exe",
-    r"C:\Windows\explorer.exe",
-    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-    r"C:\Windows\System32\lsass.exe",
-    r"C:\Windows\System32\services.exe",
-    r"C:\Program Files\Windows Defender\MsMpEng.exe",
-    r"C:\Windows\System32\cmd.exe"
-]
-
-start_time = pd.Timestamp("2026-07-19T00:00:00Z")
-
-for i in range(n_benign):
-    # Base metadata
-    proc = rng.choice(system_processes)
-    timestamp = start_time + pd.Timedelta(seconds=i*5) # 5-second steps
+# 2. Benign Windows (label 0)
+# We use SILRAD dataset which contains real Sysmon records for benign applications.
+silrad_path = ROOT / "data/datasets/silrad/fasttext-all-nofamily.csv"
+if silrad_path.exists():
+    print("Found SILRAD dataset. Extracting benign windows...")
+    from pipeline.silrad_adapter import SILRADAdapter
+    adapter = SILRADAdapter(silrad_path)
+    df_silrad = adapter.convert_events_to_windows()
+    df_benign = df_silrad[df_silrad['label'] == 0].copy()
     
-    row = {
-        'computer': 'BRDS-WIN11-SEC',
-        'process_key': f"{proc}:{rng.integers(1000, 9000)}",
-        'window_start': timestamp.isoformat(),
-        'label': 0,
-        'technique_id': 'benign',
-        'scenario': 'benign',
-        'source': fr"C:\Windows\System32\benign-logs-{(i % 3) + 1}"
-    }
-    
-    # Add features: low counts for benign activity
-    for col in feature_cols:
-        if col == 'event_count':
-            row[col] = rng.integers(1, 6) # 1-5 events per window
-        elif col in ('unique_images', 'unique_files'):
-            row[col] = rng.choice([0, 1])
-        elif col in ('event_7_count', 'event_12_count'):
-            # Image load / registry activity is common in normal system
-            row[col] = rng.choice([0, 1, 2])
-        elif col in ('file_activity_count', 'registry_activity_count'):
-            row[col] = rng.choice([0, 1, 2])
-        else:
-            # Most features like shadow copy deletion (event 1/23/26) or network are 0
-            row[col] = 0
-            
-    benign_rows.append(row)
+    n_benign = len(df_benign)
+    print(f"Loaded {n_benign} genuine benign windows from SILRAD dataset.")
+else:
+    # Fallback: Synthesize Benign Windows (label 0)
+    n_benign = 2000
+    import time
+    seed = int(time.time() * 1000) % (2**31 - 1)
+    rng = np.random.default_rng(seed)
+    print(f"SILRAD dataset not found. Using randomized synthetic generation seed: {seed}")
 
-df_benign = pd.DataFrame(benign_rows)
-print(f"Generated {n_benign} synthetic benign windows.")
+    benign_rows = []
+    system_processes = [
+        r"C:\Windows\System32\svchost.exe",
+        r"C:\Windows\explorer.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Windows\System32\lsass.exe",
+        r"C:\Windows\System32\services.exe",
+        r"C:\Program Files\Windows Defender\MsMpEng.exe",
+        r"C:\Windows\System32\cmd.exe"
+    ]
+
+    BENIGN_HOSTS = ['BRDS-WIN11-SEC', 'FINANCE-WS-01', 'DEV-LAPTOP-03', 'HR-DESKTOP-07', 'IT-ADMIN-02', 'EXEC-SURFACE-01']
+    start_time = pd.Timestamp("2026-07-19T00:00:00Z")
+
+    for i in range(n_benign):
+        proc = rng.choice(system_processes)
+        host = rng.choice(BENIGN_HOSTS)
+        timestamp = start_time + pd.Timedelta(seconds=i*5)
+        
+        row = {
+            'computer': host,
+            'process_key': f"{proc}:{rng.integers(1000, 9000)}",
+            'window_start': timestamp.isoformat(),
+            'label': 0,
+            'technique_id': 'benign',
+            'scenario': 'benign',
+            'source': fr"C:\Windows\System32\benign-logs-{(i % 5) + 1}"
+        }
+        
+        for col in feature_cols:
+            if col == 'event_count':
+                row[col] = rng.integers(1, 6)
+            elif col in ('unique_images', 'unique_files'):
+                row[col] = rng.choice([0, 1])
+            elif col in ('event_7_count', 'event_12_count', 'event_3_count', 'network_activity_count'):
+                row[col] = rng.choice([0, 1, 2])
+            elif col in ('file_activity_count', 'registry_activity_count'):
+                row[col] = rng.choice([0, 1, 2])
+            elif col in ('event_23_count', 'event_26_count', 'suspicious_path_count'):
+                row[col] = 0
+            else:
+                row[col] = int(rng.poisson(lam=0.2))
+                
+        benign_rows.append(row)
+
+    df_benign = pd.DataFrame(benign_rows)
+    print(f"Generated {n_benign} synthetic benign windows.")
 
 # 3. Combine attack and benign windows
 df_combined = pd.concat([df_attack, df_benign], ignore_index=True)
@@ -162,10 +177,14 @@ with app.app_context():
     print("Clearing old incidents from SQL...")
     Incident.query.delete()
     
+    from containment.alert_integrity import verify_and_load
     if alerts_output_path.exists():
         print("Inserting incidents into database...")
-        with open(alerts_output_path, "r", encoding="utf-8") as f:
-            alerts = json.load(f)
+        try:
+            alerts = verify_and_load(alerts_output_path)
+        except Exception as e:
+            print(f"Warning loading alerts: {e}")
+            alerts = []
             
         db_incidents = []
         for item in alerts:

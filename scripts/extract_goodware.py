@@ -70,4 +70,21 @@ if rs_input_path.exists():
 else:
     print(f"Error: RansomSet dataset file not found at {rs_input_path}")
 
+# 4. SILRAD Goodware Dataset Extraction
+# Extract goodware (class == 0) from SILRAD dataset
+silrad_input_path = datasets_dir / "silrad/SILRAD-dataset/fasttext-all-nofamily.csv"
+silrad_output_path = processed_dir / "silrad_goodware_extracted.csv"
+
+if silrad_input_path.exists():
+    print("\nProcessing SILRAD goodware dataset...")
+    from pipeline.silrad_adapter import SILRADAdapter
+    adapter = SILRADAdapter(silrad_input_path)
+    df_raw = adapter.load_raw_data()
+    df_silrad_good = df_raw[df_raw['class'] == 0]
+    df_silrad_good.to_csv(silrad_output_path, index=False)
+    print(f"Successfully extracted {len(df_silrad_good)} SILRAD goodware records to {silrad_output_path}")
+else:
+    print(f"Error: SILRAD dataset file not found at {silrad_input_path}")
+
 print("\nGoodware extraction process finished!")
+

@@ -1,6 +1,7 @@
 import pandas as pd
 import joblib
 from pathlib import Path
+import pytest
 
 from scripts.train_baseline import detection_lead_times, scenario_split, train
 from ml_engine.risk_engine import RiskEngine
@@ -51,3 +52,13 @@ def test_risk_engine_is_dry_run(tmp_path=None):
     joblib.dump(artifacts, path)
     result = RiskEngine(path).score(pd.DataFrame(rows[:1]))
     assert result.loc[0, "mode"] == "dry_run"
+
+
+def test_training_rejects_proxy_representation():
+    rows = []
+    for label, prefix in ((0, "benign"), (1, "attack")):
+        for index in range(3):
+            rows.append({"source": f"{prefix}-{index}", "label": label, "event_count": index,
+                         "representation": "fasttext_embedding_proxy"})
+    with pytest.raises(ValueError, match="proxy/embedded"):
+        train(pd.DataFrame(rows))

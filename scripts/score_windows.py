@@ -25,8 +25,10 @@ def main() -> None:
     scored = RiskEngine(args.model, threshold=args.threshold).score(pd.read_csv(args.input))
     alerts = scored[scored["would_alert"]].copy()
     fields = [field for field in ("timestamp", "window_start", "computer", "process_key", "source", "technique_id", "scenario", "risk_score", "anomaly_score", "would_alert", "mode") if field in alerts]
+    from containment.alert_integrity import sign_alerts
+    alert_records = alerts.loc[:, fields].to_dict(orient="records")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(alerts.loc[:, fields].to_json(orient="records", date_format="iso", indent=2), encoding="utf-8")
+    args.output.write_text(sign_alerts(alert_records), encoding="utf-8")
     print(f"Dry run: {len(alerts)} alerts written to {args.output}; no containment action was taken.")
 
 

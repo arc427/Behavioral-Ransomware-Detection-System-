@@ -1,0 +1,108 @@
+<Sysmon schemaversion="4.90">
+  <!-- BRDS-PEC Zero-Loophole Behavioral Telemetry Configuration -->
+  <HashAlgorithms>md5,sha256,imphash</HashAlgorithms>
+  <CheckRevocation>False</CheckRevocation>
+  
+  <EventFiltering>
+    <!-- Event ID 1: Process Creation - Capture ALL process creations to track parent-child process chains (vssadmin, wmic, powershell, bcdedit) -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Zero blanket exclusions to prevent process masquerading -->
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Event ID 3: Network Connection - Detect C2 communications, exfiltration, and lateral movement -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Exclude local loopback traffic only -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Event ID 7: Image (DLL) Loading - Detect reflective DLL injection, stealth APIs, and crypto library loads -->
+    <RuleGroup name="ImageLoad" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <ImageLoaded condition="end with">.dll</ImageLoaded>
+        <ImageLoaded condition="end with">.exe</ImageLoaded>
+        <ImageLoaded condition="end with">.sys</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- Event ID 9: Raw Access Read - Detect direct volume reading, Volume Shadow Copy bypasses, and raw disk wipers -->
+    <RuleGroup name="RawAccessRead" groupRelation="or">
+      <RawAccessRead onmatch="include">
+        <TargetDevice condition="contains">HarddiskVolume</TargetDevice>
+        <TargetDevice condition="contains">PhysicalDrive</TargetDevice>
+      </RawAccessRead>
+    </RuleGroup>
+
+    <!-- Event ID 10: Process Access - Detect LSASS credential dumping, process injection, and thread hijacking -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="end with">lsass.exe</TargetImage>
+        <TargetImage condition="end with">csrss.exe</TargetImage>
+        <TargetImage condition="end with">winlogon.exe</TargetImage>
+        <GrantedAccess condition="is">0x1F0FFF</GrantedAccess> <!-- PROCESS_ALL_ACCESS -->
+        <GrantedAccess condition="is">0x1410</GrantedAccess>   <!-- Process injection permissions -->
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Event ID 11: File Creation - Capture ALL file creation events across all drives for high-frequency encryption detection -->
+    <RuleGroup name="FileCreate" groupRelation="or">
+      <FileCreate onmatch="exclude">
+        <!-- No exclusions to ensure 100% visibility of encrypted file creation -->
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- Event ID 12: Registry Object Create & Delete - Track persistence, security service disabling, and recovery suppression -->
+    <RuleGroup name="RegistryEvent12" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">System\CurrentControlSet\Services</TargetObject>
+        <TargetObject condition="contains">Policies\Microsoft\Windows Defender</TargetObject>
+        <TargetObject condition="contains">System\CurrentControlSet\Control\SafeBoot</TargetObject>
+        <TargetObject condition="contains">Environment</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- Event ID 13: Registry Value Set - Track modification of Windows Error Reporting, Volume Shadow Copies, and BCD flags -->
+    <RuleGroup name="RegistryEvent13" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">Control\CrashControl</TargetObject>
+        <TargetObject condition="contains">Terminal Server\fDenyTSConnections</TargetObject>
+        <TargetObject condition="contains">EnableLUA</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- Event ID 15: File Create Stream Hash - Detect Alternate Data Streams (ADS) and Web-Marking (MotW) manipulation -->
+    <RuleGroup name="FileCreateStreamHash" groupRelation="or">
+      <FileCreateStreamHash onmatch="include">
+        <TargetFilename condition="contains">Zone.Identifier</TargetFilename>
+      </FileCreateStreamHash>
+    </RuleGroup>
+
+    <!-- Event ID 23: File Delete Archived - Track file deletion during encryption and original file wiping -->
+    <RuleGroup name="FileDelete" groupRelation="or">
+      <FileDelete onmatch="exclude">
+        <!-- Capture all file archiving deletions -->
+      </FileDelete>
+    </RuleGroup>
+
+    <!-- Event ID 25: Process Tampering - Detect Process Hollowing, Herpaderping, and Doppelgänging -->
+    <RuleGroup name="ProcessTampering" groupRelation="or">
+      <ProcessTampering onmatch="exclude">
+        <!-- Capture all process memory image tampering -->
+      </ProcessTampering>
+    </RuleGroup>
+
+    <!-- Event ID 26: File Delete Detected - Track direct file unlinking by ransomware binaries -->
+    <RuleGroup name="FileDeleteDetected" groupRelation="or">
+      <FileDeleteDetected onmatch="exclude">
+        <!-- Capture all direct file system unlinks -->
+      </FileDeleteDetected>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>

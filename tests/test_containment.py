@@ -51,10 +51,11 @@ def test_poll_alerts_trigger():
         with open(alerts_path, "w", encoding="utf-8") as f:
             json.dump(mock_alerts, f)
             
+        arm_token_path = Path(tmpdir) / ".arm_token"
         processed = set()
         
         # Run polling
-        poll_alerts(alerts_path, processed)
+        poll_alerts(alerts_path, arm_token_path, processed)
         
         # Verify both alert IDs were added to processed set
         assert "2026-07-19T00:00:01Z" in processed

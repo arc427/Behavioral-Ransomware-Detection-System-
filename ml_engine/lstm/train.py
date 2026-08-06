@@ -83,10 +83,12 @@ def train_lstm(input_path: Path, model_output_path: Path, epochs: int = 10, batc
             best_model_state = model.state_dict()
             
     # Save the trained model checkpoint
+    import hashlib
+    import joblib
+
     model_output_path.parent.mkdir(parents=True, exist_ok=True)
     checkpoint = {
         'model_state_dict': best_model_state if best_model_state is not None else model.state_dict(),
-        'scaler': train_dataset.scaler,
         'feature_names': features,
         'input_dim': len(features),
         'hidden_dim': 64,
@@ -94,7 +96,20 @@ def train_lstm(input_path: Path, model_output_path: Path, epochs: int = 10, batc
         'dropout': 0.2
     }
     torch.save(checkpoint, model_output_path)
-    print(f"\nTraining finished! Saved model checkpoint to {model_output_path}")
+
+    # Save scaler into a separate sidecar file to allow weights_only=True PyTorch loading
+    scaler_path = model_output_path.with_suffix('.scaler.joblib')
+    if train_dataset.scaler is not None:
+        joblib.dump(train_dataset.scaler, scaler_path)
+
+    # Compute and save SHA-256 checksum manifest
+    sha256_hash = hashlib.sha256(model_output_path.read_bytes()).hexdigest()
+    hash_path = model_output_path.with_suffix('.sha256')
+    hash_path.write_text(sha256_hash, encoding="utf-8")
+
+    print(f"\nTraining finished! Saved tensor checkpoint to {model_output_path}")
+    print(f"Saved scaler sidecar to {scaler_path}")
+    print(f"Generated SHA-256 manifest at {hash_path} ({sha256_hash})")
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train LSTM Sequence Classification Model.")

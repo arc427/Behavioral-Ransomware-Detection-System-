@@ -2,20 +2,14 @@
 param (
     [Parameter(Mandatory=$true)]
     [int]$ParentPid,
+    [switch]$Armed = $false,
     [switch]$DryRun = $false
 )
 
-# Force Dry-Run unless environment variable BRDS_DRY_RUN is explicitly set to "0"
-if ($env:BRDS_DRY_RUN -ne "0" -and !$DryRun.IsPresent) {
-    Write-Host "[SAFETY] BRDS_DRY_RUN environment variable is set. Forcing Dry-Run mode."
-    $DryRun = $true
-}
-
-# If both are absent, default to dry-run to be safe!
-if (-not $env:BRDS_DRY_RUN -and -not $DryRun.IsPresent) {
-    Write-Host "[SAFETY] No explicit active mode set. Defaulting to Dry-Run."
-    $DryRun = $true
-}
+# Safety lockdown: direct script execution is always a simulation. A future
+# reviewed containment service must perform independent token verification.
+if ($Armed.IsPresent) { Write-Warning "-Armed is ignored in this project build; containment remains dry-run." }
+$DryRun = $true
 
 function Stop-ProcessTree {
     param (
@@ -30,6 +24,9 @@ function Stop-ProcessTree {
         Stop-ProcessTree -targetPid $child.ProcessId
     }
     
+    # Protected critical Windows system processes
+    $PROTECTED_PROCESSES = @('lsass', 'csrss', 'smss', 'wininit', 'winlogon', 'services', 'system', 'svchost', 'explorer', 'spoolsv', 'dwm')
+
     # Get details of the process
     $procName = "Unknown"
     try {
@@ -38,6 +35,11 @@ function Stop-ProcessTree {
             $procName = $p.Name
         }
     } catch {}
+
+    if ($PROTECTED_PROCESSES -contains $procName.ToLower()) {
+        Write-Host "[SAFETY] Refusing to terminate protected system process: $procName (PID: $targetPid)"
+        return
+    }
     
     if ($DryRun) {
         Write-Host "[DRY-RUN] Would terminate process: $procName (PID: $targetPid)"

@@ -1,19 +1,13 @@
 [CmdletBinding()]
 param (
+    [switch]$Armed = $false,
     [switch]$DryRun = $false
 )
 
-# Force Dry-Run unless environment variable BRDS_DRY_RUN is explicitly set to "0"
-if ($env:BRDS_DRY_RUN -ne "0" -and !$DryRun.IsPresent) {
-    Write-Host "[SAFETY] BRDS_DRY_RUN environment variable is set. Forcing Dry-Run mode."
-    $DryRun = $true
-}
-
-# If both are absent, default to dry-run to be safe!
-if (-not $env:BRDS_DRY_RUN -and -not $DryRun.IsPresent) {
-    Write-Host "[SAFETY] No explicit active mode set. Defaulting to Dry-Run."
-    $DryRun = $true
-}
+# Safety lockdown: direct script execution is always a simulation. A future
+# reviewed containment service must perform independent token verification.
+if ($Armed.IsPresent) { Write-Warning "-Armed is ignored in this project build; containment remains dry-run." }
+$DryRun = $true
 
 Write-Host "[BRDS-PEC] Executing Host Isolation..."
 

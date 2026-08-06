@@ -40,6 +40,8 @@ def build_dataset(inputs: list[Path], window_seconds: int, label: int, source_ki
         frame["scenario"] = scenario
         frame["source"] = str(source)
         frame["source_kind"] = source_kind
+        frame["dataset_source"] = "splunk_attack_data" if source_kind == "attack" else "local_sysmon"
+        frame["representation"] = "raw_sysmon"
         windows.append(frame)
     return pd.concat(windows, ignore_index=True) if windows else pd.DataFrame()
 
@@ -55,7 +57,8 @@ def main() -> None:
     dataset = build_dataset(attack_inputs, args.window_seconds, label=1, source_kind="attack")
     benign_frames = []
     for benign_path in args.benign_input:
-        benign_inputs = sorted(benign_path.rglob("*.log")) if benign_path.is_dir() else [benign_path]
+        benign_inputs = (sorted([*benign_path.rglob("*.log"), *benign_path.rglob("*.evtx")])
+                         if benign_path.is_dir() else [benign_path])
         benign_frames.append(build_dataset(benign_inputs, args.window_seconds, label=0, source_kind="benign"))
     if benign_frames:
         dataset = pd.concat([dataset, *benign_frames], ignore_index=True)

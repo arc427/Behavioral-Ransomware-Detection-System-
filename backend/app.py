@@ -52,7 +52,22 @@ def create_app(overrides: dict | None = None) -> Flask:
         app.config["LSTM_INFER"] = None
         print(f"Warning: Failed to load LSTM model: {e}")
     
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # Initialize Telemetry Watchdog
+    from pipeline.watchdog import TelemetryWatchdog
+    watchdog = TelemetryWatchdog(silence_threshold_seconds=30.0)
+    app.config["WATCHDOG"] = watchdog
+
+    import os
+    raw_origins = os.environ.get("BRDS_CORS_ORIGINS") or app.config.get("BRDS_CORS_ORIGINS")
+    if raw_origins:
+        if isinstance(raw_origins, list):
+            allowed_origins = raw_origins
+        else:
+            allowed_origins = [o.strip() for o in str(raw_origins).split(",") if o.strip()]
+    else:
+        allowed_origins = ["http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:3000", "http://127.0.0.1:3000"]
+
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
     app.register_blueprint(telemetry_bp)
     app.register_blueprint(incident_bp)
     app.register_blueprint(xai_bp)
@@ -60,7 +75,15 @@ def create_app(overrides: dict | None = None) -> Flask:
     @app.get("/api/health")
     def health():
         paths = {key: Path(app.config[key]) for key in ("ALERTS_PATH", "TELEMETRY_PATH", "MODEL_PATH", "REPORT_PATH")}
-        return jsonify({"status": "ok", "mode": "dry_run", "artifacts": {key.lower().replace("_path", ""): path.exists() for key, path in paths.items()}, "containment_enabled": False})
+        sensor_status = watchdog.get_status()
+        overall_status = "ok" if sensor_status["sensor_healthy"] else "SENSOR_SILENCED"
+        return jsonify({
+            "status": overall_status,
+            "mode": "dry_run",
+            "telemetry_sensor": sensor_status,
+            "artifacts": {key.lower().replace("_path", ""): path.exists() for key, path in paths.items()},
+            "containment_enabled": False
+        })
 
     return app
 

@@ -25,6 +25,11 @@ def _page_args() -> tuple[int, int]:
     return max(1, min(limit, current_app.config["MAX_PAGE_SIZE"])), max(0, offset)
 
 
+def _safe_like(value: str) -> str:
+    """Escape % and _ wildcards in SQL LIKE query filters to prevent pattern injection."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 @telemetry_bp.get("/api/telemetry")
 def telemetry():
     try:
@@ -41,7 +46,7 @@ def telemetry():
                                    ("source", FeatureVector.source)):
             value = request.args.get(query_name)
             if value:
-                query = query.filter(field.ilike(f"%{value}%"))
+                query = query.filter(field.ilike(f"%{_safe_like(value)}%", escape="\\"))
                 
         total = query.count()
         limit, offset = _page_args()
@@ -65,7 +70,11 @@ def telemetry():
     return jsonify({"items": items, "total": total, "limit": limit, "offset": offset})
 
 
+from backend.auth import require_api_key
+
+
 @telemetry_bp.post("/api/score/live")
+@require_api_key
 def score_live():
     """Ingests a new telemetry window, runs LSTM sequence inference, writes alert if needed, and returns the score."""
     import json
@@ -97,6 +106,11 @@ def score_live():
     db.session.add(vec)
     db.session.commit()
     
+    # Ping Telemetry Watchdog to register active telemetry heartbeat
+    watchdog = current_app.config.get("WATCHDOG")
+    if watchdog:
+        watchdog.ping(count=1)
+    
     # 2. Calculate dynamic LSTM sequence score
     lstm_score = 0.0
     lstm_infer = current_app.config.get("LSTM_INFER")
@@ -119,12 +133,13 @@ def score_live():
     # Update FeatureVector risk_score
     vec.risk_score = lstm_score
     
-    # 3. Trigger alert and active containment if score >= 0.85
-    triggered = False
+    # 3. Create a signed dry-run alert if score >= 0.85. Containment is handled
+    # separately and this endpoint never claims that the host was isolated.
+    alert_created = False
     if lstm_score >= 0.85:
         existing = Incident.query.filter_by(timestamp=window_start, computer=computer).first()
         if not existing:
-            triggered = True
+            alert_created = True
             inc = Incident(
                 timestamp=window_start,
                 computer=computer,
@@ -135,17 +150,15 @@ def score_live():
             )
             db.session.add(inc)
             
-            # Write alert to JSON file for trigger daemon intercept
+            # Write signed alert to JSON file for trigger daemon intercept
+            from containment.alert_integrity import verify_and_load, sign_alerts
             alerts_path = Path(current_app.config["ALERTS_PATH"])
             alerts = []
             if alerts_path.exists():
                 try:
-                    alerts = json.loads(alerts_path.read_text(encoding="utf-8"))
-                  # Make sure it's a list
-                    if not isinstance(alerts, list):
-                        alerts = []
+                    alerts = verify_and_load(alerts_path)
                 except Exception:
-                    pass
+                    alerts = []
             
             new_alert = {
                 "computer": computer,
@@ -159,12 +172,14 @@ def score_live():
                 "risk_score": lstm_score
             }
             alerts.append(new_alert)
-            alerts_path.write_text(json.dumps(alerts, indent=2), encoding="utf-8")
+            alerts_path.write_text(sign_alerts(alerts), encoding="utf-8")
             
     db.session.commit()
     
     return jsonify({
         "status": "success",
         "risk_score": lstm_score,
-        "containment_triggered": triggered
+        "alert_created": alert_created,
+        "containment_triggered": False,
+        "mode": "dry_run",
     })

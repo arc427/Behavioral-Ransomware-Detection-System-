@@ -82,7 +82,25 @@ def metrics_for(y_true: pd.Series, scores: np.ndarray, threshold: float = 0.5) -
     }
 
 
-def train(dataset: pd.DataFrame, seed: int = 42, encryption_times: dict[str, str] | None = None) -> tuple[dict[str, object], dict[str, object]]:
+def _validate_representation(dataset: pd.DataFrame, allow_proxy_representations: bool) -> None:
+    """Prevent invalid benchmark claims from mixed raw-log and embedding data."""
+    if "representation" not in dataset.columns:
+        return
+    values = set(dataset["representation"].dropna().astype(str).unique())
+    proxy_values = {value for value in values if value != "raw_sysmon"}
+    if proxy_values and not allow_proxy_representations:
+        raise ValueError(
+            "Dataset contains proxy/embedded representations "
+            f"({', '.join(sorted(proxy_values))}). Train SILRAD-native models separately "
+            "or pass --allow-proxy-representations only for a clearly labelled demo."
+        )
+    if "raw_sysmon" in values and proxy_values:
+        raise ValueError("Refusing to mix raw Sysmon windows with embedded proxy representations.")
+
+
+def train(dataset: pd.DataFrame, seed: int = 42, encryption_times: dict[str, str] | None = None,
+          allow_proxy_representations: bool = False) -> tuple[dict[str, object], dict[str, object]]:
+    _validate_representation(dataset, allow_proxy_representations)
     labels = set(dataset.get("label", pd.Series(dtype=int)).dropna().astype(int).unique())
     if labels != {0, 1}:
         raise ValueError(
@@ -109,6 +127,8 @@ def train(dataset: pd.DataFrame, seed: int = 42, encryption_times: dict[str, str
     report: dict[str, object] = {
         "split_windows": {name: int(len(split)) for name, split in splits.items()},
         "split_sources": {name: int(split["source"].nunique()) for name, split in splits.items()},
+        "dataset_sources": sorted(dataset.get("dataset_source", pd.Series(["unspecified"])).dropna().astype(str).unique().tolist()),
+        "representations": sorted(dataset.get("representation", pd.Series(["raw_sysmon"])).dropna().astype(str).unique().tolist()),
         "validation": metrics_for(y_validation, validation_scores),
         "test": metrics_for(y_test, test_scores),
         "detection_lead_times_seconds": detection_lead_times(splits["test"], test_scores, encryption_times or {}),
@@ -123,10 +143,12 @@ def main() -> None:
     parser.add_argument("--model-output", type=Path, default=ROOT / "data/models/baseline_models.joblib")
     parser.add_argument("--report-output", type=Path, default=ROOT / "data/models/baseline_report.json")
     parser.add_argument("--encryption-times", type=Path, help="JSON object mapping attack source path to encryption-start ISO timestamp")
+    parser.add_argument("--allow-proxy-representations", action="store_true", help="Permit a single non-raw representation for an explicitly labelled exploratory run")
     args = parser.parse_args()
     dataset = pd.read_csv(args.input)
     encryption_times = json.loads(args.encryption_times.read_text(encoding="utf-8")) if args.encryption_times else None
-    artifacts, report = train(dataset, encryption_times=encryption_times)
+    artifacts, report = train(dataset, encryption_times=encryption_times,
+                              allow_proxy_representations=args.allow_proxy_representations)
     args.model_output.parent.mkdir(parents=True, exist_ok=True)
     args.report_output.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(artifacts, args.model_output)

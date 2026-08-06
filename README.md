@@ -10,14 +10,17 @@
 
 Traditional antivirus solutions often rely on malware signatures or detect ransomware only after encryption has started. BRDS-PEC takes a different approach by monitoring **behavioral patterns** from Windows Sysmon telemetry and using a **multi-stage machine learning pipeline** to detect ransomware during its early execution phase.
 
-Once a high-confidence attack is identified, the system automatically:
+Once a high-confidence attack is identified, the prototype can create a signed
+dry-run alert and demonstrate the intended response workflow:
 
-- Disconnects the host from the network
-- Terminates the malicious process tree
+- Records the intended host-isolation action (dry-run only)
+- Records the intended process-tree termination action (dry-run only)
 - Generates explainable AI (SHAP) reports
 - Logs the incident for forensic analysis
 
-The goal is to stop ransomware **before encryption occurs**.
+The research goal is to detect ransomware **before encryption occurs**. Live
+containment is intentionally disabled in this project build pending independent
+authorization, real endpoint validation, and isolated-VM testing.
 
 ---
 
