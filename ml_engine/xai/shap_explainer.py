@@ -41,7 +41,7 @@ class SHAPExplainer:
         self._load_model()
         
         # Assemble raw feature vector ordered by feature names
-        x_raw = np.array([float(feature_dict.get(col, 0.0)) for col in self.feature_names]).reshape(1, -1)
+        x_raw = np.array([float(feature_dict.get(col) or 0.0) for col in self.feature_names]).reshape(1, -1)
         
         try:
             # 1. Try to compute using the actual SHAP library
@@ -155,6 +155,7 @@ class LSTMSHAPExplainer:
                 padding = np.tile(mean_vec, (missing_steps, 1))
                 features_scaled = np.vstack((padding, features_scaled))
                 
+            self.lstm_infer.model.zero_grad()
             input_tensor = torch.tensor(features_scaled, dtype=torch.float32).unsqueeze(0).requires_grad_(True)
             output = self.lstm_infer.model(input_tensor)
             output.backward()
