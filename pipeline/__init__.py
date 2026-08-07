@@ -1,1 +1,1 @@
-# TODO: Implementation required
+"""BRDS-PEC Telemetry Ingestion & Window Processing Pipeline."""
