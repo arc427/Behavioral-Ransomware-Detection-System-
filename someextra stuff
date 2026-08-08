@@ -1,0 +1,101 @@
+Perfect. If all datasets are in place, **the next step is to run the pipeline and verify that it can actually find and parse the attack data**.
+
+You don't need to activate the virtual environment. Your PowerShell execution-policy problem only affects `Activate.ps1`.
+
+### 1. Go to the project
+
+```powershell
+cd "C:\Users\vboxuser\Behavioral-Ransomware-Detection-System-"
+```
+
+### 2. Verify Python
+
+```powershell
+.\venv\Scripts\python.exe --version
+```
+
+### 3. Run the attack-data pipeline
+
+```powershell
+.\venv\Scripts\python.exe scripts\run_pipeline.py
+```
+
+**Stop here if you get an error and paste the entire error.**
+
+If it succeeds, you should see something similar to:
+
+```text
+Wrote XXXX windows with XX numeric features to ...\data\processed\sysmon_attack_windows.csv
+```
+
+### 4. Check that the attack dataset was generated
+
+```powershell
+Get-Item ".\data\processed\sysmon_attack_windows.csv" |
+    Select-Object Name, Length
+```
+
+Then:
+
+```powershell
+.\venv\Scripts\python.exe -c "import pandas as pd; df=pd.read_csv('data/processed/sysmon_attack_windows.csv'); print('Rows:',len(df)); print('Columns:',len(df.columns)); print(df['label'].value_counts())"
+```
+
+### 5. Then build the complete BRDS dataset
+
+Only after `run_pipeline.py` succeeds:
+
+```powershell
+.\venv\Scripts\python.exe scripts\prepare_live_data.py
+```
+
+That should generate:
+
+```text
+data/
+├── processed/
+│   ├── sysmon_attack_windows.csv
+│   ├── sysmon_combined_windows.csv
+│   ├── sysmon_windows.csv
+│   └── dry_run_alerts.json
+│
+├── models/
+│   ├── baseline_models.joblib
+│   └── baseline_report.json
+│
+└── brds.db
+```
+
+### 6. Verify the result
+
+```powershell
+Get-ChildItem ".\data\processed" -File |
+    Select-Object Name, Length
+```
+
+```powershell
+Get-ChildItem ".\data\models" -File |
+    Select-Object Name, Length
+```
+
+```powershell
+Test-Path ".\data\brds.db"
+```
+
+If the last command returns:
+
+```text
+True
+```
+
+then the **dataset → feature extraction → ML → scoring → database** portion is working.
+
+**Do not run actual ransomware yet.** At this point we're getting the offline/replay pipeline working first; afterward we can move to Sysmon telemetry collection and the dashboard while keeping containment in dry-run mode.
+
+**Your next command is simply:**
+
+```powershell
+.\venv\Scripts\python.exe scripts\run_pipeline.py
+```
+
+Paste its output here, whether it succeeds or fails.
