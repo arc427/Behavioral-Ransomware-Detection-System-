@@ -21,7 +21,18 @@ alerts_output_path = processed_dir / "dry_run_alerts.json"
 print("Preparing live data...")
 
 if not attack_path.exists():
-    raise FileNotFoundError(f"Missing base attack dataset at {attack_path}")
+    print(f"Base attack dataset not found at {attack_path}. Running pipeline script to generate attack windows...")
+    run_pipeline_script = ROOT / "scripts/run_pipeline.py"
+    if run_pipeline_script.exists():
+        try:
+            subprocess.run([sys.executable, str(run_pipeline_script)], check=True)
+        except Exception as e:
+            print(f"Warning: Could not automatically generate attack dataset: {e}")
+    if not attack_path.exists():
+        raise FileNotFoundError(
+            f"Missing base attack dataset at {attack_path}.\n"
+            "Please ensure data/processed/sysmon_attack_windows.csv exists or pull the latest repository changes."
+        )
 
 # 1. Read attack windows
 df_attack = pd.read_csv(attack_path)
