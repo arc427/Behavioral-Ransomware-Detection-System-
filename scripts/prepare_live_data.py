@@ -3,6 +3,7 @@ import numpy as np
 import subprocess
 from pathlib import Path
 
+import os
 import sys
 
 # Paths
@@ -20,48 +21,49 @@ alerts_output_path = processed_dir / "dry_run_alerts.json"
 
 print("Preparing live data...")
 
-if not attack_path.exists():
-    print(f"Base attack dataset not found at {attack_path}. Running pipeline script to generate attack windows...")
-    run_pipeline_script = ROOT / "scripts/run_pipeline.py"
-    if run_pipeline_script.exists():
-        try:
-            subprocess.run([sys.executable, str(run_pipeline_script)], check=True)
-        except Exception as e:
-            print(f"Warning: Could not automatically generate attack dataset: {e}")
-    if not attack_path.exists():
-        raise FileNotFoundError(
-            f"Missing base attack dataset at {attack_path}.\n"
-            "Please ensure data/processed/sysmon_attack_windows.csv exists or pull the latest repository changes."
-        )
-
-# 1. Read attack windows
-df_attack = pd.read_csv(attack_path)
-n_attack = len(df_attack)
-print(f"Loaded {n_attack} attack windows.")
-
-# Define metadata and feature columns
-meta_cols = ['computer', 'process_key', 'window_start', 'label', 'technique_id', 'scenario', 'source']
-feature_cols = [c for c in df_attack.columns if c not in meta_cols]
-
-# 2. Benign Windows (label 0)
-# We use SILRAD dataset which contains real Sysmon records for benign applications.
-silrad_path = ROOT / "data/datasets/silrad/fasttext-all-nofamily.csv"
-if silrad_path.exists():
-    print("Found SILRAD dataset. Extracting benign windows...")
-    from pipeline.silrad_adapter import SILRADAdapter
-    adapter = SILRADAdapter(silrad_path)
-    df_silrad = adapter.convert_events_to_windows()
-    df_benign = df_silrad[df_silrad['label'] == 0].copy()
-    
-    n_benign = len(df_benign)
-    print(f"Loaded {n_benign} genuine benign windows from SILRAD dataset.")
+# 1. Check if combined dataset already exists
+if combined_path.exists():
+    print(f"Found pre-combined dataset at {combined_path}. Loading {combined_path.name}...")
+    df_combined = pd.read_csv(combined_path)
+    n_attack = len(df_combined[df_combined['label'] == 1])
+    n_benign = len(df_combined[df_combined['label'] == 0])
+    print(f"Loaded {len(df_combined)} total windows ({n_attack} attack, {n_benign} benign).")
 else:
-    # Fallback: Synthesize Benign Windows (label 0)
-    n_benign = 2000
-    import time
-    seed = int(time.time() * 1000) % (2**31 - 1)
-    rng = np.random.default_rng(seed)
-    print(f"SILRAD dataset not found. Using randomized synthetic generation seed: {seed}")
+    if not attack_path.exists():
+        print(f"Base attack dataset not found at {attack_path}. Running pipeline script to generate attack windows...")
+        run_pipeline_script = ROOT / "scripts/run_pipeline.py"
+        if run_pipeline_script.exists():
+            try:
+                subprocess.run([sys.executable, str(run_pipeline_script)], check=True)
+            except Exception as e:
+                print(f"Warning: Could not automatically generate attack dataset: {e}")
+        if not attack_path.exists():
+            raise FileNotFoundError(
+                f"Missing base attack dataset at {attack_path}.\n"
+                "Please ensure data/processed/sysmon_attack_windows.csv exists or pull the latest repository changes."
+            )
+
+    # Read attack windows
+    df_attack = pd.read_csv(attack_path)
+    n_attack = len(df_attack)
+    print(f"Loaded {n_attack} attack windows.")
+
+    # Benign Windows (label 0)
+    silrad_path = ROOT / "data/datasets/silrad/fasttext-all-nofamily.csv"
+    if silrad_path.exists():
+        print("Found SILRAD dataset. Extracting benign windows...")
+        from pipeline.silrad_adapter import SILRADAdapter
+        adapter = SILRADAdapter(silrad_path)
+        df_silrad = adapter.convert_events_to_windows()
+        df_benign = df_silrad[df_silrad['label'] == 0].copy()
+        n_benign = len(df_benign)
+    else:
+        # Fallback: Synthesize Benign Windows (label 0)
+        n_benign = 2000
+        import time
+        seed = int(time.time() * 1000) % (2**31 - 1)
+        rng = np.random.default_rng(seed)
+        print(f"SILRAD dataset not found. Using randomized synthetic generation seed: {seed}")
 
     benign_rows = []
     system_processes = [
@@ -111,10 +113,10 @@ else:
     df_benign = pd.DataFrame(benign_rows)
     print(f"Generated {n_benign} synthetic benign windows.")
 
-# 3. Combine attack and benign windows
-df_combined = pd.concat([df_attack, df_benign], ignore_index=True)
-df_combined.to_csv(combined_path, index=False)
-print(f"Saved combined dataset ({len(df_combined)} rows) to {combined_path}")
+    # 3. Combine attack and benign windows
+    df_combined = pd.concat([df_attack, df_benign], ignore_index=True)
+    df_combined.to_csv(combined_path, index=False)
+    print(f"Saved combined dataset ({len(df_combined)} rows) to {combined_path}")
 
 # 4. Train the baseline model using scripts/train_baseline.py
 print("\nTraining baseline model with combined dataset...")
@@ -125,7 +127,7 @@ train_cmd = [
     "--model-output", str(models_dir / "baseline_models.joblib"),
     "--report-output", str(models_dir / "baseline_report.json")
 ]
-subprocess.run(train_cmd, check=True)
+subprocess.run(train_cmd, check=True, env=os.environ.copy())
 print("Model training complete.")
 
 # 5. Score the windows to generate live telemetry and alerts
@@ -137,7 +139,7 @@ score_cmd = [
     "--model", str(models_dir / "baseline_models.joblib"),
     "--output", str(alerts_output_path)
 ]
-subprocess.run(score_cmd, check=True)
+subprocess.run(score_cmd, check=True, env=os.environ.copy())
 print("Scoring complete. Alerts written to dry_run_alerts.json.")
 
 # Copy the scored combined dataset with risk scores to data/processed/sysmon_windows.csv
