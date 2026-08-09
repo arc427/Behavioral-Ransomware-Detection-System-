@@ -1,0 +1,540 @@
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-23T15:07:27.705390700Z'/><EventRecordID>701611</EventRecordID><Correlation ActivityID='{5B093F44-5D96-0003-5A43-095B965DD901}'/><Execution ProcessID='2812' ThreadID='4500'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-dc01.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>2</Data><Data Name='ScriptBlockText'># Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Amazon Software License (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+# http://aws.amazon.com/asl/
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+
+&lt;#-----------------------------------------------------------------------------------------------------------
+    Initialize-Ec2Disk brings online, partitions and formats disk.
+-------------------------------------------------------------------------------------------------------------#&gt;
+function Initialize-Ec2Disk
+{
+  param(
+    [Parameter(Mandatory = $true,Position = 0)]
+    [int]$DiskIndex,
+
+    [Parameter(Mandatory = $true,Position = 1)]
+    [int]$EphemeralCount,
+
+    [Parameter(Mandatory = $true,Position = 2)]
+    [bool]$IsEphemeral = $false
+  )
+
+  Write-Log ("Initializing disk {0} begins" -f $DiskIndex)
+
+  $isLargeDisk = $false
+
+  try
+  {
+    # If the disk size exceeds 2199023255551 bytes (2 TB),
+    # the disk must use GPT partition table.
+    $disk = Get-Disk -Number $DiskIndex
+    if ($disk.Size -gt 2199023255551)
+    {
+      $isLargeDisk = $true
+    }
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to get disk size: {0}" -f $_.Exception.Message)
+  }
+
+  try
+  {
+    Write-Log ("Initializing the disk ...")
+
+    if (-not $isLargeDisk)
+    {
+      Initialize-Disk -Number $DiskIndex -PartitionStyle MBR | Out-Null
+    }
+    else
+    {
+      Initialize-Disk -Number $DiskIndex -PartitionStyle GPT | Out-Null
+    }
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to initialize disk: {0}" -f $_.Exception.Message)
+  }
+
+  $driveLetter = ""
+
+  try
+  {
+    Write-Log "Looking for drive letter ..."
+
+    # If the disk is ephmeral (instance storage), drive letter starts from Z.
+    # Otherwise, drive letter starts from D.
+    if ($IsEphemeral)
+    {
+      # One-liner to get next available drive letter from Z to A.
+      for ($i = 91; Get-PSDrive ($driveLetter = [char] -- $i) 2&gt;$null) {}
+    }
+    else
+    {
+      # One-liner to get next available drive letter from A to Z.
+      for ($i = 67; Get-PSDrive ($driveLetter = [char]++ $i) 2&gt;$null) {}
+    }
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to initialize disk: {0}. There is no available drive letter left to use" -f $DiskIndex)
+    return ""
+  }
+
+  try
+  {
+    # Stop Shell HW Detection service to prevent the prompt to pop up.
+    Stop-Service -Name ShellHWDetection -ErrorAction SilentlyContinue
+
+    Write-Log ("Creating partition with drive letter {0} ..." -f $driveLetter)
+
+    # Create a partition with the given drive index and letter.
+    if (-not $isLargeDisk)
+    {
+      $partition = New-Partition $DiskIndex -MbrType IFS -DriveLetter $driveLetter -UseMaximumSize -IsActive
+    }
+    else
+    {
+      $partition = New-Partition $DiskIndex -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}' -DriveLetter $driveLetter -UseMaximumSize
+    }
+
+    # Check if volume is formatted for the disk.
+    # If volume is not in OK status, we need to format the volume with given parameters.
+    $formatted = Get-Volume -Partition $partition
+    if (-not $formatted -or $formatted.OperationalStatus -ne "OK")
+    {
+      Write-Log "Formatting the volume ..."
+
+      # Format the volume on the created/exsiting partition using the partition reference.
+      if ($IsEphemeral)
+      {
+        $formatted = Format-Volume -Partition $partition -FileSystem NTFS -NewFileSystemLabel "Temporary Storage $($EphemeralCount)" -Confirm:$false
+      }
+      else
+      {
+        $formatted = Format-Volume -Partition $partition -FileSystem NTFS -Confirm:$false
+      }
+    }
+    else
+    {
+      throw New-Object System.Exception ("Volume already has been formatted.")
+    }
+
+    # This updates the drive info
+    Get-PSDrive | Out-Null
+
+    Write-Log ("Disk {0} is successfully initialized, partitioned and formatted" -f $DiskIndex)
+
+    return $driveLetter
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to initialize disk {0}: {1}" -f $DiskIndex,$_.Exception.Message)
+  }
+  finally
+  {
+    # Start the service back.
+    Start-Service -Name ShellHWDetection -ErrorAction SilentlyContinue
+  }
+
+  return ""
+}
+
+# SIG # Begin signature block
+# MIIuqwYJKoZIhvcNAQcCoIIunDCCLpgCAQExDzANBglghkgBZQMEAgEFADB5Bgor
+# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDwXD7Y17Dk9hNR
+# Rwc70/aqPReSFpU/nooaeyD+7cgw/6CCFBkwggXAMIIEqKADAgECAhAP0bvKeWvX
+# +N1MguEKmpYxMA0GCSqGSIb3DQEBCwUAMGwxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
+# EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKzApBgNV
+# BAMTIkRpZ2lDZXJ0IEhpZ2ggQXNzdXJhbmNlIEVWIFJvb3QgQ0EwHhcNMjIwMTEz
+# MDAwMDAwWhcNMzExMTA5MjM1OTU5WjBiMQswCQYDVQQGEwJVUzEVMBMGA1UEChMM
+# RGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3d3cuZGlnaWNlcnQuY29tMSEwHwYDVQQD
+# ExhEaWdpQ2VydCBUcnVzdGVkIFJvb3QgRzQwggIiMA0GCSqGSIb3DQEBAQUAA4IC
+# DwAwggIKAoICAQC/5pBzaN675F1KPDAiMGkz7MKnJS7JIT3yithZwuEppz1Yq3aa
+# za57G4QNxDAf8xukOBbrVsaXbR2rsnnyyhHS5F/WBTxSD1Ifxp4VpX6+n6lXFllV
+# cq9ok3DCsrp1mWpzMpTREEQQLt+C8weE5nQ7bXHiLQwb7iDVySAdYyktzuxeTsiT
+# +CFhmzTrBcZe7FsavOvJz82sNEBfsXpm7nfISKhmV1efVFiODCu3T6cw2Vbuyntd
+# 463JT17lNecxy9qTXtyOj4DatpGYQJB5w3jHtrHEtWoYOAMQjdjUN6QuBX2I9YI+
+# EJFwq1WCQTLX2wRzKm6RAXwhTNS8rhsDdV14Ztk6MUSaM0C/CNdaSaTC5qmgZ92k
+# J7yhTzm1EVgX9yRcRo9k98FpiHaYdj1ZXUJ2h4mXaXpI8OCiEhtmmnTK3kse5w5j
+# rubU75KSOp493ADkRSWJtppEGSt+wJS00mFt6zPZxd9LBADMfRyVw4/3IbKyEbe7
+# f/LVjHAsQWCqsWMYRJUadmJ+9oCw++hkpjPRiQfhvbfmQ6QYuKZ3AeEPlAwhHbJU
+# KSWJbOUOUlFHdL4mrLZBdd56rF+NP8m800ERElvlEFDrMcXKchYiCd98THU/Y+wh
+# X8QgUWtvsauGi0/C1kVfnSD8oR7FwI+isX4KJpn15GkvmB0t9dmpsh3lGwIDAQAB
+# o4IBZjCCAWIwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU7NfjgtJxXWRM3y5n
+# P+e6mK4cD08wHwYDVR0jBBgwFoAUsT7DaQP4v0cB1JgmGggC72NkK8MwDgYDVR0P
+# AQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMH8GCCsGAQUFBwEBBHMwcTAk
+# BggrBgEFBQcwAYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEkGCCsGAQUFBzAC
+# hj1odHRwOi8vY2FjZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRIaWdoQXNzdXJh
+# bmNlRVZSb290Q0EuY3J0MEsGA1UdHwREMEIwQKA+oDyGOmh0dHA6Ly9jcmwzLmRp
+# Z2ljZXJ0LmNvbS9EaWdpQ2VydEhpZ2hBc3N1cmFuY2VFVlJvb3RDQS5jcmwwHAYD
+# VR0gBBUwEzAHBgVngQwBAzAIBgZngQwBBAEwDQYJKoZIhvcNAQELBQADggEBAEHx
+# qRH0DxNHecllao3A7pgEpMbjDPKisedfYk/ak1k2zfIe4R7sD+EbP5HU5A/C5pg0
+# /xkPZigfT2IxpCrhKhO61z7H0ZL+q93fqpgzRh9Onr3g7QdG64AupP2uU7SkwaT1
+# IY1rzAGt9Rnu15ClMlIr28xzDxj4+87eg3Gn77tRWwR2L62t0+od/P1Tk+WMieNg
+# GbngLyOOLFxJy34riDkruQZhiPOuAnZ2dMFkkbiJUZflhX0901emWG4f7vtpYeJa
+# 3Cgh6GO6Ps9W7Zrk9wXqyvPsEt84zdp7PiuTUy9cUQBY3pBIowrHC/Q7bVUx8ALM
+# R3eWUaNetbxcyEMRoacwggawMIIEmKADAgECAhAIrUCyYNKcTJ9ezam9k67ZMA0G
+# CSqGSIb3DQEBDAUAMGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJ
+# bmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lDZXJ0
+# IFRydXN0ZWQgUm9vdCBHNDAeFw0yMTA0MjkwMDAwMDBaFw0zNjA0MjgyMzU5NTla
+# MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UE
+# AxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBTSEEz
+# ODQgMjAyMSBDQTEwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDVtC9C
+# 0CiteLdd1TlZG7GIQvUzjOs9gZdwxbvEhSYwn6SOaNhc9es0JAfhS0/TeEP0F9ce
+# 2vnS1WcaUk8OoVf8iJnBkcyBAz5NcCRks43iCH00fUyAVxJrQ5qZ8sU7H/Lvy0da
+# E6ZMswEgJfMQ04uy+wjwiuCdCcBlp/qYgEk1hz1RGeiQIXhFLqGfLOEYwhrMxe6T
+# SXBCMo/7xuoc82VokaJNTIIRSFJo3hC9FFdd6BgTZcV/sk+FLEikVoQ11vkunKoA
+# FdE3/hoGlMJ8yOobMubKwvSnowMOdKWvObarYBLj6Na59zHh3K3kGKDYwSNHR7Oh
+# D26jq22YBoMbt2pnLdK9RBqSEIGPsDsJ18ebMlrC/2pgVItJwZPt4bRc4G/rJvmM
+# 1bL5OBDm6s6R9b7T+2+TYTRcvJNFKIM2KmYoX7BzzosmJQayg9Rc9hUZTO1i4F4z
+# 8ujo7AqnsAMrkbI2eb73rQgedaZlzLvjSFDzd5Ea/ttQokbIYViY9XwCFjyDKK05
+# huzUtw1T0PhH5nUwjewwk3YUpltLXXRhTT8SkXbev1jLchApQfDVxW0mdmgRQRNY
+# mtwmKwH0iU1Z23jPgUo+QEdfyYFQc4UQIyFZYIpkVMHMIRroOBl8ZhzNeDhFMJlP
+# /2NPTLuqDQhTQXxYPUez+rbsjDIJAsxsPAxWEQIDAQABo4IBWTCCAVUwEgYDVR0T
+# AQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUaDfg67Y7+F8Rhvv+YXsIiGX0TkIwHwYD
+# VR0jBBgwFoAU7NfjgtJxXWRM3y5nP+e6mK4cD08wDgYDVR0PAQH/BAQDAgGGMBMG
+# A1UdJQQMMAoGCCsGAQUFBwMDMHcGCCsGAQUFBwEBBGswaTAkBggrBgEFBQcwAYYY
+# aHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEEGCCsGAQUFBzAChjVodHRwOi8vY2Fj
+# ZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRUcnVzdGVkUm9vdEc0LmNydDBDBgNV
+# HR8EPDA6MDigNqA0hjJodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRGlnaUNlcnRU
+# cnVzdGVkUm9vdEc0LmNybDAcBgNVHSAEFTATMAcGBWeBDAEDMAgGBmeBDAEEATAN
+# BgkqhkiG9w0BAQwFAAOCAgEAOiNEPY0Idu6PvDqZ01bgAhql+Eg08yy25nRm95Ry
+# sQDKr2wwJxMSnpBEn0v9nqN8JtU3vDpdSG2V1T9J9Ce7FoFFUP2cvbaF4HZ+N3HL
+# IvdaqpDP9ZNq4+sg0dVQeYiaiorBtr2hSBh+3NiAGhEZGM1hmYFW9snjdufE5Btf
+# Q/g+lP92OT2e1JnPSt0o618moZVYSNUa/tcnP/2Q0XaG3RywYFzzDaju4ImhvTnh
+# OE7abrs2nfvlIVNaw8rpavGiPttDuDPITzgUkpn13c5UbdldAhQfQDN8A+KVssIh
+# dXNSy0bYxDQcoqVLjc1vdjcshT8azibpGL6QB7BDf5WIIIJw8MzK7/0pNVwfiThV
+# 9zeKiwmhywvpMRr/LhlcOXHhvpynCgbWJme3kuZOX956rEnPLqR0kq3bPKSchh/j
+# wVYbKyP/j7XqiHtwa+aguv06P0WmxOgWkVKLQcBIhEuWTatEQOON8BUozu3xGFYH
+# Ki8QxAwIZDwzj64ojDzLj4gLDb879M4ee47vtevLt/B3E+bnKD+sEq6lLyJsQfmC
+# XBVmzGwOysWGw/YmMwwHS6DTBwJqakAwSEs0qFEgu60bhQjiWQ1tygVQK+pKHJ6l
+# /aCnHwZ05/LWUpD9r4VIIflXO7ScA+2GRfS0YW6/aOImYIbqyK+p/pQd52MbOoZW
+# eE4wggedMIIFhaADAgECAhACxyVvD/v+ctpMbqqoNdVVMA0GCSqGSIb3DQEBCwUA
+# MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UE
+# AxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBTSEEz
+# ODQgMjAyMSBDQTEwHhcNMjIxMTA1MDAwMDAwWhcNMjMxMTA4MjM1OTU5WjCB8jET
+# MBEGCysGAQQBgjc8AgEDEwJVUzEZMBcGCysGAQQBgjc8AgECEwhEZWxhd2FyZTEd
+# MBsGA1UEDwwUUHJpdmF0ZSBPcmdhbml6YXRpb24xEDAOBgNVBAUTBzQxNTI5NTQx
+# CzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYDVQQHEwdTZWF0
+# dGxlMSIwIAYDVQQKExlBbWF6b24gV2ViIFNlcnZpY2VzLCBJbmMuMRMwEQYDVQQL
+# EwpBbWF6b24gRUMyMSIwIAYDVQQDExlBbWF6b24gV2ViIFNlcnZpY2VzLCBJbmMu
+# MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEA0jWbhD4ghdeO4Nndy/2h
+# vCCUPPKnL63myeBZYItXG1dnB5gpJIrBVu40V4OaiNwyUAiBrO5eGM4IaWLqbxvj
+# 324KRuXtmHcXvF7YRgiciflrsfzoUEu4TdKj+owTNA2uektzbVLWzT0wFKe5n4Xe
+# CAqQQe33ODVB+cBTUSv/TRWf3Edni17S8HldwSq+YvPIRv21Shp7fiCxO45ETxwl
+# BsoeNrwLAQz0QpiaGdY5Fb+12jcoWRqYqAiXGeDLA7Wxq1+Xj2n+UwelzhYfcE5/
+# p8w4FsFJi9tVb0aWS63OnP+aTOCrA5bz5j9wq8x25/hCGm6HktmbZRwjKiFQ+HdL
+# g0t3250T9hxvXjudh/DGPCIcmQzKBuxijP8f60DutqLk/EsS+Z5xD/s9/rruXfAj
+# czkZ/xpHLHKa+Fp7x+tIwuC5Zq6VAM6CFgJOWefYG5h8sjZFhrphbnYzs0C75SCx
+# KOKFe6RyrQ+O+xh96ky4kw47zNXbbc7xBqVjLjbOgSTFAgMBAAGjggI1MIICMTAf
+# BgNVHSMEGDAWgBRoN+Drtjv4XxGG+/5hewiIZfROQjAdBgNVHQ4EFgQUOv3VJlso
+# 3pHAv43pOWMQfdVdjXkwLgYDVR0RBCcwJaAjBggrBgEFBQcIA6AXMBUME1VTLURF
+# TEFXQVJFLTQxNTI5NTQwDgYDVR0PAQH/BAQDAgeAMBMGA1UdJQQMMAoGCCsGAQUF
+# BwMDMIG1BgNVHR8Ega0wgaowU6BRoE+GTWh0dHA6Ly9jcmwzLmRpZ2ljZXJ0LmNv
+# bS9EaWdpQ2VydFRydXN0ZWRHNENvZGVTaWduaW5nUlNBNDA5NlNIQTM4NDIwMjFD
+# QTEuY3JsMFOgUaBPhk1odHRwOi8vY3JsNC5kaWdpY2VydC5jb20vRGlnaUNlcnRU
+# cnVzdGVkRzRDb2RlU2lnbmluZ1JTQTQwOTZTSEEzODQyMDIxQ0ExLmNybDA9BgNV
+# HSAENjA0MDIGBWeBDAEDMCkwJwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuZGlnaWNl
+# cnQuY29tL0NQUzCBlAYIKwYBBQUHAQEEgYcwgYQwJAYIKwYBBQUHMAGGGGh0dHA6
+# Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBcBggrBgEFBQcwAoZQaHR0cDovL2NhY2VydHMu
+# ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VHJ1c3RlZEc0Q29kZVNpZ25pbmdSU0E0MDk2
+# U0hBMzg0MjAyMUNBMS5jcnQwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQsFAAOC
+# AgEARxdSHXYd6BO2G0SQESFEKuC2xGsuekZq4Q//Jg3mHKBkDSLrK1PEriBExb5n
+# JNAmCoh374kLOj9fbV5kPmj2kTdH65b1GVIp4VADVOwla1NGrbqFIvSzUN68xqWw
+# ITM15yR5OU4peuSD8pdxGLwIM3YEsorhVugVI/TZ3oSs89vMNKIUK4qrHvDpveUf
+# 1tQKFYUwyKEkauDqovs2pS7G6+1mqSgXx4Nt1OdZwwdXS8d14xcsaz96C+4G7fAr
+# lbcKiGnHwxlO0FaC+piuverA1NU3lw8UFlTdaQxldKhS47iKZaWTS+mwi2H5PC2G
+# cgXNlQG5tuh/TimhfHpqrvtrXBpNQTU6ydv6E/Bj6DE5VkJGIKua0GvI7LkwFBFC
+# WD1hrAEjtY2LkPAgMDQe9iqPoEGeNwZeEjJjLgayPLP7NsJRdA6uhXboMEFW2LNf
+# VM/hdzl1RG/5kJ4La/mEkpvQRtZRbaSPuSHRxGz//P62qKFQGL0K/YI9RlowyGrQ
+# ENfvztdmqPN8xLJ7C7IuWkx2ygO++4Vva/DaiXX2gMtt6hYYfngOt6+beRWLbpdr
+# c</Data><Data Name='ScriptBlockId'>bd57d2f6-fa2a-4b6c-9d27-12bec6320615</Data><Data Name='Path'>C:\ProgramData\Amazon\EC2-Windows\Launch\Module\Scripts\Initialize-Ec2Disk.ps1</Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-23T14:48:30.292439800Z'/><EventRecordID>744233</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0003-F906-6C5A965DD901}'/><Execution ProcessID='4940' ThreadID='4540'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>2</Data><Data Name='ScriptBlockText'># Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Amazon Software License (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+# http://aws.amazon.com/asl/
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+
+&lt;#-----------------------------------------------------------------------------------------------------------
+    Initialize-Ec2Disk brings online, partitions and formats disk.
+-------------------------------------------------------------------------------------------------------------#&gt;
+function Initialize-Ec2Disk
+{
+  param(
+    [Parameter(Mandatory = $true,Position = 0)]
+    [int]$DiskIndex,
+
+    [Parameter(Mandatory = $true,Position = 1)]
+    [int]$EphemeralCount,
+
+    [Parameter(Mandatory = $true,Position = 2)]
+    [bool]$IsEphemeral = $false
+  )
+
+  Write-Log ("Initializing disk {0} begins" -f $DiskIndex)
+
+  $isLargeDisk = $false
+
+  try
+  {
+    # If the disk size exceeds 2199023255551 bytes (2 TB),
+    # the disk must use GPT partition table.
+    $disk = Get-Disk -Number $DiskIndex
+    if ($disk.Size -gt 2199023255551)
+    {
+      $isLargeDisk = $true
+    }
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to get disk size: {0}" -f $_.Exception.Message)
+  }
+
+  try
+  {
+    Write-Log ("Initializing the disk ...")
+
+    if (-not $isLargeDisk)
+    {
+      Initialize-Disk -Number $DiskIndex -PartitionStyle MBR | Out-Null
+    }
+    else
+    {
+      Initialize-Disk -Number $DiskIndex -PartitionStyle GPT | Out-Null
+    }
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to initialize disk: {0}" -f $_.Exception.Message)
+  }
+
+  $driveLetter = ""
+
+  try
+  {
+    Write-Log "Looking for drive letter ..."
+
+    # If the disk is ephmeral (instance storage), drive letter starts from Z.
+    # Otherwise, drive letter starts from D.
+    if ($IsEphemeral)
+    {
+      # One-liner to get next available drive letter from Z to A.
+      for ($i = 91; Get-PSDrive ($driveLetter = [char] -- $i) 2&gt;$null) {}
+    }
+    else
+    {
+      # One-liner to get next available drive letter from A to Z.
+      for ($i = 67; Get-PSDrive ($driveLetter = [char]++ $i) 2&gt;$null) {}
+    }
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to initialize disk: {0}. There is no available drive letter left to use" -f $DiskIndex)
+    return ""
+  }
+
+  try
+  {
+    # Stop Shell HW Detection service to prevent the prompt to pop up.
+    Stop-Service -Name ShellHWDetection -ErrorAction SilentlyContinue
+
+    Write-Log ("Creating partition with drive letter {0} ..." -f $driveLetter)
+
+    # Create a partition with the given drive index and letter.
+    if (-not $isLargeDisk)
+    {
+      $partition = New-Partition $DiskIndex -MbrType IFS -DriveLetter $driveLetter -UseMaximumSize -IsActive
+    }
+    else
+    {
+      $partition = New-Partition $DiskIndex -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}' -DriveLetter $driveLetter -UseMaximumSize
+    }
+
+    # Check if volume is formatted for the disk.
+    # If volume is not in OK status, we need to format the volume with given parameters.
+    $formatted = Get-Volume -Partition $partition
+    if (-not $formatted -or $formatted.OperationalStatus -ne "OK")
+    {
+      Write-Log "Formatting the volume ..."
+
+      # Format the volume on the created/exsiting partition using the partition reference.
+      if ($IsEphemeral)
+      {
+        $formatted = Format-Volume -Partition $partition -FileSystem NTFS -NewFileSystemLabel "Temporary Storage $($EphemeralCount)" -Confirm:$false
+      }
+      else
+      {
+        $formatted = Format-Volume -Partition $partition -FileSystem NTFS -Confirm:$false
+      }
+    }
+    else
+    {
+      throw New-Object System.Exception ("Volume already has been formatted.")
+    }
+
+    # This updates the drive info
+    Get-PSDrive | Out-Null
+
+    Write-Log ("Disk {0} is successfully initialized, partitioned and formatted" -f $DiskIndex)
+
+    return $driveLetter
+  }
+  catch
+  {
+    Write-ErrorLog ("Failed to initialize disk {0}: {1}" -f $DiskIndex,$_.Exception.Message)
+  }
+  finally
+  {
+    # Start the service back.
+    Start-Service -Name ShellHWDetection -ErrorAction SilentlyContinue
+  }
+
+  return ""
+}
+
+# SIG # Begin signature block
+# MIIuqwYJKoZIhvcNAQcCoIIunDCCLpgCAQExDzANBglghkgBZQMEAgEFADB5Bgor
+# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDwXD7Y17Dk9hNR
+# Rwc70/aqPReSFpU/nooaeyD+7cgw/6CCFBkwggXAMIIEqKADAgECAhAP0bvKeWvX
+# +N1MguEKmpYxMA0GCSqGSIb3DQEBCwUAMGwxCzAJBgNVBAYTAlVTMRUwEwYDVQQK
+# EwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKzApBgNV
+# BAMTIkRpZ2lDZXJ0IEhpZ2ggQXNzdXJhbmNlIEVWIFJvb3QgQ0EwHhcNMjIwMTEz
+# MDAwMDAwWhcNMzExMTA5MjM1OTU5WjBiMQswCQYDVQQGEwJVUzEVMBMGA1UEChMM
+# RGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3d3cuZGlnaWNlcnQuY29tMSEwHwYDVQQD
+# ExhEaWdpQ2VydCBUcnVzdGVkIFJvb3QgRzQwggIiMA0GCSqGSIb3DQEBAQUAA4IC
+# DwAwggIKAoICAQC/5pBzaN675F1KPDAiMGkz7MKnJS7JIT3yithZwuEppz1Yq3aa
+# za57G4QNxDAf8xukOBbrVsaXbR2rsnnyyhHS5F/WBTxSD1Ifxp4VpX6+n6lXFllV
+# cq9ok3DCsrp1mWpzMpTREEQQLt+C8weE5nQ7bXHiLQwb7iDVySAdYyktzuxeTsiT
+# +CFhmzTrBcZe7FsavOvJz82sNEBfsXpm7nfISKhmV1efVFiODCu3T6cw2Vbuyntd
+# 463JT17lNecxy9qTXtyOj4DatpGYQJB5w3jHtrHEtWoYOAMQjdjUN6QuBX2I9YI+
+# EJFwq1WCQTLX2wRzKm6RAXwhTNS8rhsDdV14Ztk6MUSaM0C/CNdaSaTC5qmgZ92k
+# J7yhTzm1EVgX9yRcRo9k98FpiHaYdj1ZXUJ2h4mXaXpI8OCiEhtmmnTK3kse5w5j
+# rubU75KSOp493ADkRSWJtppEGSt+wJS00mFt6zPZxd9LBADMfRyVw4/3IbKyEbe7
+# f/LVjHAsQWCqsWMYRJUadmJ+9oCw++hkpjPRiQfhvbfmQ6QYuKZ3AeEPlAwhHbJU
+# KSWJbOUOUlFHdL4mrLZBdd56rF+NP8m800ERElvlEFDrMcXKchYiCd98THU/Y+wh
+# X8QgUWtvsauGi0/C1kVfnSD8oR7FwI+isX4KJpn15GkvmB0t9dmpsh3lGwIDAQAB
+# o4IBZjCCAWIwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU7NfjgtJxXWRM3y5n
+# P+e6mK4cD08wHwYDVR0jBBgwFoAUsT7DaQP4v0cB1JgmGggC72NkK8MwDgYDVR0P
+# AQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMH8GCCsGAQUFBwEBBHMwcTAk
+# BggrBgEFBQcwAYYYaHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEkGCCsGAQUFBzAC
+# hj1odHRwOi8vY2FjZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRIaWdoQXNzdXJh
+# bmNlRVZSb290Q0EuY3J0MEsGA1UdHwREMEIwQKA+oDyGOmh0dHA6Ly9jcmwzLmRp
+# Z2ljZXJ0LmNvbS9EaWdpQ2VydEhpZ2hBc3N1cmFuY2VFVlJvb3RDQS5jcmwwHAYD
+# VR0gBBUwEzAHBgVngQwBAzAIBgZngQwBBAEwDQYJKoZIhvcNAQELBQADggEBAEHx
+# qRH0DxNHecllao3A7pgEpMbjDPKisedfYk/ak1k2zfIe4R7sD+EbP5HU5A/C5pg0
+# /xkPZigfT2IxpCrhKhO61z7H0ZL+q93fqpgzRh9Onr3g7QdG64AupP2uU7SkwaT1
+# IY1rzAGt9Rnu15ClMlIr28xzDxj4+87eg3Gn77tRWwR2L62t0+od/P1Tk+WMieNg
+# GbngLyOOLFxJy34riDkruQZhiPOuAnZ2dMFkkbiJUZflhX0901emWG4f7vtpYeJa
+# 3Cgh6GO6Ps9W7Zrk9wXqyvPsEt84zdp7PiuTUy9cUQBY3pBIowrHC/Q7bVUx8ALM
+# R3eWUaNetbxcyEMRoacwggawMIIEmKADAgECAhAIrUCyYNKcTJ9ezam9k67ZMA0G
+# CSqGSIb3DQEBDAUAMGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJ
+# bmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lDZXJ0
+# IFRydXN0ZWQgUm9vdCBHNDAeFw0yMTA0MjkwMDAwMDBaFw0zNjA0MjgyMzU5NTla
+# MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UE
+# AxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBTSEEz
+# ODQgMjAyMSBDQTEwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDVtC9C
+# 0CiteLdd1TlZG7GIQvUzjOs9gZdwxbvEhSYwn6SOaNhc9es0JAfhS0/TeEP0F9ce
+# 2vnS1WcaUk8OoVf8iJnBkcyBAz5NcCRks43iCH00fUyAVxJrQ5qZ8sU7H/Lvy0da
+# E6ZMswEgJfMQ04uy+wjwiuCdCcBlp/qYgEk1hz1RGeiQIXhFLqGfLOEYwhrMxe6T
+# SXBCMo/7xuoc82VokaJNTIIRSFJo3hC9FFdd6BgTZcV/sk+FLEikVoQ11vkunKoA
+# FdE3/hoGlMJ8yOobMubKwvSnowMOdKWvObarYBLj6Na59zHh3K3kGKDYwSNHR7Oh
+# D26jq22YBoMbt2pnLdK9RBqSEIGPsDsJ18ebMlrC/2pgVItJwZPt4bRc4G/rJvmM
+# 1bL5OBDm6s6R9b7T+2+TYTRcvJNFKIM2KmYoX7BzzosmJQayg9Rc9hUZTO1i4F4z
+# 8ujo7AqnsAMrkbI2eb73rQgedaZlzLvjSFDzd5Ea/ttQokbIYViY9XwCFjyDKK05
+# huzUtw1T0PhH5nUwjewwk3YUpltLXXRhTT8SkXbev1jLchApQfDVxW0mdmgRQRNY
+# mtwmKwH0iU1Z23jPgUo+QEdfyYFQc4UQIyFZYIpkVMHMIRroOBl8ZhzNeDhFMJlP
+# /2NPTLuqDQhTQXxYPUez+rbsjDIJAsxsPAxWEQIDAQABo4IBWTCCAVUwEgYDVR0T
+# AQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUaDfg67Y7+F8Rhvv+YXsIiGX0TkIwHwYD
+# VR0jBBgwFoAU7NfjgtJxXWRM3y5nP+e6mK4cD08wDgYDVR0PAQH/BAQDAgGGMBMG
+# A1UdJQQMMAoGCCsGAQUFBwMDMHcGCCsGAQUFBwEBBGswaTAkBggrBgEFBQcwAYYY
+# aHR0cDovL29jc3AuZGlnaWNlcnQuY29tMEEGCCsGAQUFBzAChjVodHRwOi8vY2Fj
+# ZXJ0cy5kaWdpY2VydC5jb20vRGlnaUNlcnRUcnVzdGVkUm9vdEc0LmNydDBDBgNV
+# HR8EPDA6MDigNqA0hjJodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRGlnaUNlcnRU
+# cnVzdGVkUm9vdEc0LmNybDAcBgNVHSAEFTATMAcGBWeBDAEDMAgGBmeBDAEEATAN
+# BgkqhkiG9w0BAQwFAAOCAgEAOiNEPY0Idu6PvDqZ01bgAhql+Eg08yy25nRm95Ry
+# sQDKr2wwJxMSnpBEn0v9nqN8JtU3vDpdSG2V1T9J9Ce7FoFFUP2cvbaF4HZ+N3HL
+# IvdaqpDP9ZNq4+sg0dVQeYiaiorBtr2hSBh+3NiAGhEZGM1hmYFW9snjdufE5Btf
+# Q/g+lP92OT2e1JnPSt0o618moZVYSNUa/tcnP/2Q0XaG3RywYFzzDaju4ImhvTnh
+# OE7abrs2nfvlIVNaw8rpavGiPttDuDPITzgUkpn13c5UbdldAhQfQDN8A+KVssIh
+# dXNSy0bYxDQcoqVLjc1vdjcshT8azibpGL6QB7BDf5WIIIJw8MzK7/0pNVwfiThV
+# 9zeKiwmhywvpMRr/LhlcOXHhvpynCgbWJme3kuZOX956rEnPLqR0kq3bPKSchh/j
+# wVYbKyP/j7XqiHtwa+aguv06P0WmxOgWkVKLQcBIhEuWTatEQOON8BUozu3xGFYH
+# Ki8QxAwIZDwzj64ojDzLj4gLDb879M4ee47vtevLt/B3E+bnKD+sEq6lLyJsQfmC
+# XBVmzGwOysWGw/YmMwwHS6DTBwJqakAwSEs0qFEgu60bhQjiWQ1tygVQK+pKHJ6l
+# /aCnHwZ05/LWUpD9r4VIIflXO7ScA+2GRfS0YW6/aOImYIbqyK+p/pQd52MbOoZW
+# eE4wggedMIIFhaADAgECAhACxyVvD/v+ctpMbqqoNdVVMA0GCSqGSIb3DQEBCwUA
+# MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UE
+# AxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBTSEEz
+# ODQgMjAyMSBDQTEwHhcNMjIxMTA1MDAwMDAwWhcNMjMxMTA4MjM1OTU5WjCB8jET
+# MBEGCysGAQQBgjc8AgEDEwJVUzEZMBcGCysGAQQBgjc8AgECEwhEZWxhd2FyZTEd
+# MBsGA1UEDwwUUHJpdmF0ZSBPcmdhbml6YXRpb24xEDAOBgNVBAUTBzQxNTI5NTQx
+# CzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpXYXNoaW5ndG9uMRAwDgYDVQQHEwdTZWF0
+# dGxlMSIwIAYDVQQKExlBbWF6b24gV2ViIFNlcnZpY2VzLCBJbmMuMRMwEQYDVQQL
+# EwpBbWF6b24gRUMyMSIwIAYDVQQDExlBbWF6b24gV2ViIFNlcnZpY2VzLCBJbmMu
+# MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEA0jWbhD4ghdeO4Nndy/2h
+# vCCUPPKnL63myeBZYItXG1dnB5gpJIrBVu40V4OaiNwyUAiBrO5eGM4IaWLqbxvj
+# 324KRuXtmHcXvF7YRgiciflrsfzoUEu4TdKj+owTNA2uektzbVLWzT0wFKe5n4Xe
+# CAqQQe33ODVB+cBTUSv/TRWf3Edni17S8HldwSq+YvPIRv21Shp7fiCxO45ETxwl
+# BsoeNrwLAQz0QpiaGdY5Fb+12jcoWRqYqAiXGeDLA7Wxq1+Xj2n+UwelzhYfcE5/
+# p8w4FsFJi9tVb0aWS63OnP+aTOCrA5bz5j9wq8x25/hCGm6HktmbZRwjKiFQ+HdL
+# g0t3250T9hxvXjudh/DGPCIcmQzKBuxijP8f60DutqLk/EsS+Z5xD/s9/rruXfAj
+# czkZ/xpHLHKa+Fp7x+tIwuC5Zq6VAM6CFgJOWefYG5h8sjZFhrphbnYzs0C75SCx
+# KOKFe6RyrQ+O+xh96ky4kw47zNXbbc7xBqVjLjbOgSTFAgMBAAGjggI1MIICMTAf
+# BgNVHSMEGDAWgBRoN+Drtjv4XxGG+/5hewiIZfROQjAdBgNVHQ4EFgQUOv3VJlso
+# 3pHAv43pOWMQfdVdjXkwLgYDVR0RBCcwJaAjBggrBgEFBQcIA6AXMBUME1VTLURF
+# TEFXQVJFLTQxNTI5NTQwDgYDVR0PAQH/BAQDAgeAMBMGA1UdJQQMMAoGCCsGAQUF
+# BwMDMIG1BgNVHR8Ega0wgaowU6BRoE+GTWh0dHA6Ly9jcmwzLmRpZ2ljZXJ0LmNv
+# bS9EaWdpQ2VydFRydXN0ZWRHNENvZGVTaWduaW5nUlNBNDA5NlNIQTM4NDIwMjFD
+# QTEuY3JsMFOgUaBPhk1odHRwOi8vY3JsNC5kaWdpY2VydC5jb20vRGlnaUNlcnRU
+# cnVzdGVkRzRDb2RlU2lnbmluZ1JTQTQwOTZTSEEzODQyMDIxQ0ExLmNybDA9BgNV
+# HSAENjA0MDIGBWeBDAEDMCkwJwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuZGlnaWNl
+# cnQuY29tL0NQUzCBlAYIKwYBBQUHAQEEgYcwgYQwJAYIKwYBBQUHMAGGGGh0dHA6
+# Ly9vY3NwLmRpZ2ljZXJ0LmNvbTBcBggrBgEFBQcwAoZQaHR0cDovL2NhY2VydHMu
+# ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VHJ1c3RlZEc0Q29kZVNpZ25pbmdSU0E0MDk2
+# U0hBMzg0MjAyMUNBMS5jcnQwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQsFAAOC
+# AgEARxdSHXYd6BO2G0SQESFEKuC2xGsuekZq4Q//Jg3mHKBkDSLrK1PEriBExb5n
+# JNAmCoh374kLOj9fbV5kPmj2kTdH65b1GVIp4VADVOwla1NGrbqFIvSzUN68xqWw
+# ITM15yR5OU4peuSD8pdxGLwIM3YEsorhVugVI/TZ3oSs89vMNKIUK4qrHvDpveUf
+# 1tQKFYUwyKEkauDqovs2pS7G6+1mqSgXx4Nt1OdZwwdXS8d14xcsaz96C+4G7fAr
+# lbcKiGnHwxlO0FaC+piuverA1NU3lw8UFlTdaQxldKhS47iKZaWTS+mwi2H5PC2G
+# cgXNlQG5tuh/TimhfHpqrvtrXBpNQTU6ydv6E/Bj6DE5VkJGIKua0GvI7LkwFBFC
+# WD1hrAEjtY2LkPAgMDQe9iqPoEGeNwZeEjJjLgayPLP7NsJRdA6uhXboMEFW2LNf
+# VM/hdzl1RG/5kJ4La/mEkpvQRtZRbaSPuSHRxGz//P62qKFQGL0K/YI9RlowyGrQ
+# ENfvztdmqPN8xLJ7C7IuWkx2ygO++4Vva/DaiXX2gMtt6hYYfngOt6+beRWLbpdr
+# cNgUrUJAGg8saVOkrBdziuB0fS93jso0mBvz0DTFXE5vvE8yOYQWR0njIOKbZuB5
+# A15FSIngJ+joE7MFjkxwkQwx5czjrG0GVfqSSK8WiL5yq2wxghnoMIIZ5AIBATB9
+# MGkxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjFBMD8GA1UE
+# AxM4RGlnaUNlcnQgVHJ1c3RlZCBHNCBDb2RlIFNpZ25pbmcgUlNBNDA5NiBTSEEz
+# ODQgMjAyMSBDQTECEALHJW8P+/5y2kxuqqg11VUwDQYJYIZIAWUDBAIBBQCgfDAQ
+# BgorBgEEAYI3AgEMMQIwADAZBgkqhkiG9w0BCQMxDAYKKwYBBAGCNwIBBDAcBgor
+# BgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAvBgkqhkiG9w0BCQQxIgQg1ONCaIRE
+# DO143PA/tKVrNSCDoroLA2/o/YzySrFiLmYwDQYJKoZIhvcNAQEBBQAEggGAULAi
+# FaR5Z+RTw2tyvLBZpSXDYnvwJKJliNmh1y8JLqEIV60ACQeb8Udc7vLpYMWXVA16
+# OzFKqWnOXGrkI8cPIkw2+41E8QPimiFfjOLBSCXVz27tOz6fHew0bETyTdDElKwD
+# GH/E2v3SysP1IkAHP+pSg9OmqTXx/ae1Q3f4zAR6oalq/CCkSdStaREbn6ZA9kE0
+# Pr8kGLP9WV4+LN43b/ue2tOf7g1P6d++xpDAVuThxodurqCTapJ3NaG9zYas3wBL
+# esOOZXSOKaNGJgOtVUejtIrc+uu4suUrao3Y2cGdK0kvuhREmTR6/NBauUEnJnIY
+# aeOGzD/LGP9YPAEW7aKRTx4t0N4NKvGcBqmRi9/xwyLU351XICalbPo+PoDEzU+K
+# CjTMpS/iJss2qvjARZUhTJIVVHlAdfI6/yWzSeHcxkIHosVGPsRZZbvXatLvVvMo
+# cEVZeprhneUP//wjCHQxt99eYzEh+/k+W5r3+qfamjpA2WGBEivdZHgv2SV+oYIX
+# PjCCFzoGCisGAQQBgjcDAwExghcqMIIXJgYJKoZIhvcNAQcCoIIXFzCCFxMCAQMx
+# DzANBglghkgBZQMEAgEFADB4BgsqhkiG9w0BCRABBKBpBGcwZQIBAQYJYIZIAYb9
+# bAcBMDEwDQYJYIZIAWUDBAIBBQAEIEt</Data><Data Name='ScriptBlockId'>ac9fe0ba-e03d-4e9c-8a80-0a7c72d9b7d1</Data><Data Name='Path'>C:\ProgramData\Amazon\EC2-Windows\Launch\Module\Scripts\Initialize-Ec2Disk.ps1</Data></EventData></Event>

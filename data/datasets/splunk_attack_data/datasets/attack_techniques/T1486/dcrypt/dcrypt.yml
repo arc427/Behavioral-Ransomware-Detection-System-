@@ -1,0 +1,13 @@
+author: Michael Haag
+id: cc9b260f-efc9-11eb-926b-660bf0943fbb
+date: '2020-11-15'
+description: Manual generation of dcrypt utility.
+environment: attack_range
+directory: dcrypt
+mitre_technique:
+- T1486
+datasets:
+- name: windows-sysmon
+  path: /datasets/attack_techniques/T1486/dcrypt/windows-sysmon.log
+  sourcetype: XmlWinEventLog
+  source: XmlWinEventLog:Microsoft-Windows-Sysmon/Operational

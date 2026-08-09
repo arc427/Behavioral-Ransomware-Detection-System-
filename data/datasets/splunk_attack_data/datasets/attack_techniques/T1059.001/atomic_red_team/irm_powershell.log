@@ -1,0 +1,131 @@
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{a0c1853b-5c40-4b15-8766-3cf1c58f985a}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2025-04-17T17:30:57.759591300Z'/><EventRecordID>1008895</EventRecordID><Correlation ActivityID='{192111d8-aa2d-0002-30da-23192daadb01}'/><Execution ProcessID='3012' ThreadID='6744'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>ar-win-2</Computer><Security UserID='S-1-5-21-1648302093-581775527-2018708918-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Get IP address first
+$externalIP = (Invoke-RestMethod -Uri "https://api.ipify.org?format=json" -Method Get).ip
+
+# Then use it to get more detailed information
+$detailedInfo = Invoke-RestMethod -Uri "https://ipinfo.io/$externalIP/json" -Method Get
+
+# Save the information to a variable that could be exfiltrated
+$systemInfo = @{
+    "IPAddress" = $externalIP
+    "GeoLocation" = $detailedInfo.loc
+    "City" = $detailedInfo.city
+    "Region" = $detailedInfo.region
+    "Country" = $detailedInfo.country
+    "Hostname" = $env:COMPUTERNAME
+    "Username" = $env:USERNAME
+    "CollectionTime" = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+}</Data><Data Name='ScriptBlockId'>81673f70-0ba8-44e0-8d02-00d7b4fc0978</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{a0c1853b-5c40-4b15-8766-3cf1c58f985a}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2025-04-17T17:30:57.603181100Z'/><EventRecordID>1008892</EventRecordID><Correlation ActivityID='{192111d8-aa2d-0002-2ada-23192daadb01}'/><Execution ProcessID='3012' ThreadID='6744'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>ar-win-2</Computer><Security UserID='S-1-5-21-1648302093-581775527-2018708918-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Get external IP address from api.ipify.org
+$ipAddress = Invoke-RestMethod -Uri "https://api.ipify.org?format=json" -Method Get</Data><Data Name='ScriptBlockId'>763beb7b-47e8-460f-935a-a38edbe6691f</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{a0c1853b-5c40-4b15-8766-3cf1c58f985a}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2025-04-17T17:30:57.428561300Z'/><EventRecordID>1008889</EventRecordID><Correlation ActivityID='{192111d8-aa2d-0002-24da-23192daadb01}'/><Execution ProcessID='3012' ThreadID='6744'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>ar-win-2</Computer><Security UserID='S-1-5-21-1648302093-581775527-2018708918-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Get IP and geolocation information from ipinfo.io
+$ipInfoResult = Invoke-RestMethod -Uri "https://ipinfo.io/json" -Method Get</Data><Data Name='ScriptBlockId'>55f54f4a-7878-482c-a97c-f1af48793654</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{a0c1853b-5c40-4b15-8766-3cf1c58f985a}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2025-04-17T17:30:57.413339100Z'/><EventRecordID>1008887</EventRecordID><Correlation ActivityID='{192111d8-aa2d-0002-20da-23192daadb01}'/><Execution ProcessID='3012' ThreadID='6744'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>ar-win-2</Computer><Security UserID='S-1-5-21-1648302093-581775527-2018708918-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Atomic Test for PowerShell Invoke-RestMethod IP Information Collection
+# This test simulates malicious reconnaissance by using Invoke-RestMethod to collect IP and geolocation data
+
+function Test-InvokeRestMethodIPInfo {
+    [CmdletBinding()]
+    param(
+        [switch]$UseIpInfo = $true,
+        [switch]$UseIpify = $true,
+        [switch]$DisplayResults = $true
+    )
+    
+    Begin {
+        Write-Host "Starting PowerShell Invoke-RestMethod IP Information Collection Test" -ForegroundColor Cyan
+        $results = @()
+    }
+    
+    Process {
+        try {
+            # Test 1: Basic IP Information Collection from ipinfo.io
+            if ($UseIpInfo) {
+                Write-Host "Executing Test 1: Invoke-RestMethod with ipinfo.io" -ForegroundColor Yellow
+                $testScript = @'
+# Get IP and geolocation information from ipinfo.io
+$ipInfoResult = Invoke-RestMethod -Uri "https://ipinfo.io/json" -Method Get
+'@
+                
+                # Execute the script to trigger detection
+                $ipInfoResult = Invoke-Expression $testScript
+                
+                if ($DisplayResults) {
+                    Write-Host "IP Info Results:" -ForegroundColor Green
+                    $ipInfoResult | Format-List
+                }
+                
+                $results += "Test 1: ipinfo.io request completed"
+            }
+            
+            # Test 2: Basic IP Information Collection from api.ipify.org
+            if ($UseIpify) {
+                Write-Host "Executing Test 2: Invoke-RestMethod with api.ipify.org" -ForegroundColor Yellow
+                $testScript = @'
+# Get external IP address from api.ipify.org
+$ipAddress = Invoke-RestMethod -Uri "https://api.ipify.org?format=json" -Method Get
+'@
+                
+                # Execute the script to trigger detection
+                $ipAddress = Invoke-Expression $testScript
+                
+                if ($DisplayResults) {
+                    Write-Host "IP Address Result:" -ForegroundColor Green
+                    $ipAddress | Format-List
+                }
+                
+                $results += "Test 2: api.ipify.org request completed"
+            }
+            
+            # Test 3: Combine both in a script block to simulate more sophisticated collection
+            if ($UseIpInfo -and $UseIpify) {
+                Write-Host "Executing Test 3: Combined requests in a script block" -ForegroundColor Yellow
+                $testScript = @'
+# Get IP address first
+$externalIP = (Invoke-RestMethod -Uri "https://api.ipify.org?format=json" -Method Get).ip
+
+# Then use it to get more detailed information
+$detailedInfo = Invoke-RestMethod -Uri "https://ipinfo.io/$externalIP/json" -Method Get
+
+# Save the information to a variable that could be exfiltrated
+$systemInfo = @{
+    "IPAddress" = $externalIP
+    "GeoLocation" = $detailedInfo.loc
+    "City" = $detailedInfo.city
+    "Region" = $detailedInfo.region
+    "Country" = $detailedInfo.country
+    "Hostname" = $env:COMPUTERNAME
+    "Username" = $env:USERNAME
+    "CollectionTime" = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+}
+'@
+                
+                # Execute the script to trigger detection
+                Invoke-Expression $testScript
+                
+                if ($DisplayResults -and (Get-Variable -Name systemInfo -ErrorAction SilentlyContinue)) {
+                    Write-Host "Combined System Info:" -ForegroundColor Green
+                    $systemInfo | Format-List
+                }
+                
+                $results += "Test 3: Combined request completed"
+            }
+        }
+        catch {
+            Write-Host "Error: $_" -ForegroundColor Red
+            Write-Host "Exception details: $($_.Exception)" -ForegroundColor Red
+        }
+    }
+    
+    End {
+        Write-Host "`nTest Summary:" -ForegroundColor Cyan
+        $results | ForEach-Object { Write-Host "  - $_" -ForegroundColor Green }
+        Write-Host "`nTest complete. The detection analytic should have triggered on these events." -ForegroundColor Cyan
+        Write-Host "Check your PowerShell Script Block Logging (EventID 4104) for Invoke-RestMethod with ipinfo.io or api.ipify.org." -ForegroundColor Yellow
+    }
+}
+
+# Run the test with all options enabled
+Test-InvokeRestMethodIPInfo -UseIpInfo -UseIpify -DisplayResults
+
+# Alternatively, you can run individual tests:
+# Test-InvokeRestMethodIPInfo -UseIpInfo
+# Test-InvokeRestMethodIPInfo -UseIpify</Data><Data Name='ScriptBlockId'>32c8ef34-88fc-4e51-b538-ad07329cc011</Data><Data Name='Path'>C:\Users\Administrator\Desktop\irm.ps1</Data></EventData></Event>

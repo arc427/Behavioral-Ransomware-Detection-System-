@@ -1,0 +1,636 @@
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T15:07:32.824226200Z'/><EventRecordID>227668</EventRecordID><Correlation ActivityID='{2EF1732A-5754-0002-EC51-F82E5457D901}'/><Execution ProcessID='15960' ThreadID='18736'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-exch01.attackrange.local</Computer><Security UserID='S-1-5-21-2814101754-3021673353-4211140692-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>Enable-PSRemoting -SkipNetworkProfileCheck
+</Data><Data Name='ScriptBlockId'>c6ad7c6d-9b2a-413b-a3fc-0956444fd9e8</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T15:06:14.891406500Z'/><EventRecordID>226841</EventRecordID><Correlation ActivityID='{2EF1732A-5754-0003-CFCC-F62E5457D901}'/><Execution ProcessID='15960' ThreadID='18736'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-exch01.attackrange.local</Computer><Security UserID='S-1-5-21-2814101754-3021673353-4211140692-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>
+function Enable-PSRemoting
+{
+[CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact="Medium")]
+param(
+    [Parameter()] [bool] $Force,
+    [Parameter()] [string] $queryForRegisterDefault,    
+    [Parameter()] [string] $captionForRegisterDefault,
+    [Parameter()] [string] $queryForSet,    
+    [Parameter()] [string] $captionForSet,
+    [Parameter()] [bool] $skipNetworkProfileCheck
+)
+
+    end
+    {
+        # Enable all Session Configurations
+        try {
+            $null = $PSBoundParameters.Remove("queryForRegisterDefault")  
+            $null = $PSBoundParameters.Remove("captionForRegisterDefault") 
+            $null = $PSBoundParameters.Remove("queryForSet")  
+            $null = $PSBoundParameters.Remove("captionForSet")  
+
+            $PSBoundParameters.Add("Name","*")
+
+            # first try to enable all the sessions
+            Enable-PSSessionConfiguration @PSBoundParameters
+
+            # make sure default powershell end points exist 
+            #  ie., Microsoft.PowerShell
+            #       and Microsoft.PowerShell32 (wow64)
+            
+            $errorCount = $error.Count
+            $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+            $newErrorCount = $error.Count
+
+            # remove the 'No Session Configuration matches criteria' errors
+            for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+            {
+                $error.RemoveAt(0)
+            }
+
+            $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell","Register-PSSessionConfiguration Microsoft.PowerShell -force"
+            if ((!$endpoint) -and 
+                ($force  -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)))
+            {
+                $null = Register-PSSessionConfiguration Microsoft.PowerShell -force
+                set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell\Quotas\MaxShellsPerUser -value "25" -confirm:$false
+                set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell\Quotas\MaxIdleTimeoutms -value 2147483647 -confirm:$false
+                restart-service winrm -confirm:$false
+            }  
+
+            # Check Microsoft.PowerShell.Workflow endpoint
+            $errorCount = $error.Count
+            $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell.workflow -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+            $newErrorCount = $error.Count
+
+            # remove the 'No Session Configuration matches criteria' errors
+            for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+            {
+                $error.RemoveAt(0)
+            }
+
+            if (!$endpoint)
+            {
+                $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell.Workflow","Register-PSSessionConfiguration Microsoft.PowerShell.Workflow -force"
+                if ($force -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)) {
+                    $tempxmlfile = [io.path]::Gettempfilename()
+                    "
+&lt;PlugInConfiguration xmlns='http://schemas.microsoft.com/wbem/wsman/1/config/PluginConfiguration'
+    Name='Microsoft.Powershell.Workflow'
+    Filename='%windir%\system32\pwrshplugin.dll'
+    SDKVersion='2'
+    XmlRenderingType='text'
+    UseSharedProcess='true'
+    ProcessIdleTimeoutSec='1209600'
+    OutputBufferingMode='Block'
+    Enabled='True'
+&gt;
+&lt;InitializationParameters&gt;
+&lt;Param Name='PSVersion'  Value='5.1' /&gt;
+&lt;Param Name='AssemblyName' Value='Microsoft.PowerShell.Workflow.ServiceCore, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL'/&gt;
+&lt;Param Name='PSSessionConfigurationTypeName' Value='Microsoft.PowerShell.Workflow.PSWorkflowSessionConfiguration'/&gt;
+&lt;Param Name='SessionConfigurationData'
+    Value ='
+        &amp;lt;SessionConfigurationData&amp;gt;
+            &amp;lt;Param Name=&amp;quot;ModulesToImport&amp;quot; Value=&amp;quot;%windir%\system32\windowspowershell\v1.0\Modules\PSWorkflow&amp;quot; /&amp;gt;
+            &amp;lt;Param Name=&amp;quot;PrivateData&amp;quot;&amp;gt;
+                &amp;lt;PrivateData&amp;gt;
+                    &amp;lt;Param Name=&amp;quot;enablevalidation&amp;quot; Value=&amp;quot;true&amp;quot; /&amp;gt;
+                &amp;lt;/PrivateData&amp;gt;
+            &amp;lt;/Param&amp;gt;
+       &amp;lt;/SessionConfigurationData&amp;gt;
+       '
+/&gt;
+&lt;/InitializationParameters&gt; 
+&lt;Resources&gt;
+    &lt;Resource ResourceUri='http://schemas.microsoft.com/powershell/Microsoft.Powershell.Workflow' SupportsOptions='true' ExactMatch='true'&gt;
+        &lt;Security Uri='http://schemas.microsoft.com/powershell/Microsoft.PowerShell.Workflow' Sddl='O:NSG:BAD:P(D;;GA;;;NU)(A;;GA;;;BA)(A;;GA;;;RM)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)' ExactMatch='False'/&gt;
+        &lt;Capability Type='Shell' /&gt;        
+    &lt;/Resource&gt;
+&lt;/Resources&gt;
+&lt;Quotas MaxMemoryPerShellMB='1024' MaxIdleTimeoutms='2147483647' MaxConcurrentUsers='5' IdleTimeoutms='7200000' MaxProcessesPerShell='15' MaxConcurrentCommandsPerShell='1000' MaxShells='25' MaxShellsPerUser='25' /&gt;
+&lt;/PlugInConfiguration&gt;
+" | out-file -force -filepath $tempxmlfile -confirm:$false
+                    $null = winrm create winrm/config/plugin?Name=Microsoft.PowerShell.Workflow -file:$tempxmlfile
+                    remove-item -path $tempxmlfile -force -confirm:$false
+                    restart-service winrm -confirm:$false
+                }
+            }
+
+            $pa = $env:PROCESSOR_ARCHITECTURE
+            if ($pa -eq "x86")
+            {
+                # on 64-bit platforms, wow64 bit process has the correct architecture
+                # available in processor_architew6432 varialbe
+                $pa = $env:PROCESSOR_ARCHITEW6432
+            }
+            if ((($pa -eq "amd64")) -and (test-path $env:windir\syswow64\pwrshplugin.dll))
+            {
+                # Check availability of WOW64 endpoint. Register if not available.
+                $errorCount = $error.Count
+                $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell32 -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+                $newErrorCount = $error.Count
+
+                # remove the 'No Session Configuration matches criteria' errors
+                for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+                {
+                    $error.RemoveAt(0)
+                }
+
+                $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell32","Register-PSSessionConfiguration Microsoft.PowerShell32 -processorarchitecture x86 -force"
+                if ((!$endpoint) -and 
+                    ($force  -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)))
+                {
+                    $null = Register-PSSessionConfiguration Microsoft.PowerShell32 -processorarchitecture x86 -force
+                    set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell32\Quotas\MaxShellsPerUser -value "25" -confirm:$false
+                    set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell32\Quotas\MaxIdleTimeoutms -value 2147483647 -confirm:$false
+                    restart-service winrm -confirm:$false
+                }
+            }
+
+            # remove the 'network deny all' tag
+            Get-PSSessionConfiguration -Force:$Force | % {
+                $sddl = $null
+                if ($_.psobject.members["SecurityDescriptorSddl"])
+                {
+                    $sddl = $_.psobject.members["SecurityDescriptorSddl"].Value
+                }
+
+                if ($sddl)
+                {
+                    # Construct SID for network users
+                    [system.security.principal.wellknownsidtype]$evst = "NetworkSid"
+                    $networkSID = new-object system.security.principal.securityidentifier $evst,$null
+                    
+                    $securityIdentifierToPurge = $null
+                    $sd = new-object system.security.accesscontrol.commonsecuritydescriptor $false,$false,$sddl
+                    $sd.DiscretionaryAcl | % {
+                        if (($_.acequalifier -eq "accessdenied") -and ($_.securityidentifier -match $networkSID) -and ($_.AccessMask -eq 268435456))
+                        {
+                            $securityIdentifierToPurge = $_.securityidentifier
+                        }
+                    }
+
+                    if ($securityIdentifierToPurge)
+                    {
+                        # Remove the specific ACE
+                        $sd.discretionaryacl.RemoveAccessSpecific('Deny', $securityIdentifierToPurge, 268435456, 'none', 'none')
+
+                        # if there is no discretionaryacl..add Builtin Administrators and Remote Management Users
+                        # to the DACL group as this is the default WSMan behavior
+                        if ($sd.discretionaryacl.count -eq 0)
+                        {
+                            # Built-in administrators.
+                            [system.security.principal.wellknownsidtype]$bast = "BuiltinAdministratorsSid"
+                            $basid = new-object system.security.principal.securityidentifier $bast,$null
+                            $sd.DiscretionaryAcl.AddAccess('Allow',$basid, 268435456, 'none', 'none')
+
+                            # Remote Management Users, Win8+ only
+                            if ([System.Environment]::OSVersion.Version -ge "6.2.0.0")
+                            {
+                                $rmSidId = new-object system.security.principal.securityidentifier "S-1-5-32-580"
+                                $sd.DiscretionaryAcl.AddAccess('Allow', $rmSidId, 268435456, 'none', 'none')
+                            }
+
+                            # Interactive Users
+                            $iaSidId = new-object system.security.principal.securityidentifier "S-1-5-4"
+                            $sd.DiscretionaryAcl.AddAccess('Allow', $iaSidId, 268435456, 'none', 'none')
+                        }
+
+                        $sddl = $sd.GetSddlForm("all")
+                    }
+                } ## end of if($sddl)
+
+                $qMessage = $queryForSet -f $_.name,$sddl
+                if (($sddl) -and ($force -or $pscmdlet.ShouldProcess($qMessage, $captionForSet)))
+                {
+                    $null = Set-PSSessionConfiguration -Name $_.Name -SecurityDescriptorSddl $sddl -NoServiceRestart -force -WarningAction 0
+                }
+            } ## end of foreach-object
+        } 
+        catch {
+            throw
+        }  # end of catch   
+    } # end of end block
+} # end of Enable-PSRemoting
+
+Enable-PSRemoting -force $args[0] -queryForRegisterDefault $args[1] -captionForRegisterDefault $args[2] -queryForSet $args[3] -captionForSet $args[4] -whatif:$args[5] -confirm:$args[6] -skipNetworkProfileCheck $args[7]
+</Data><Data Name='ScriptBlockId'>25bbbf63-a031-4961-946b-5a78d0139956</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T15:06:14.878722000Z'/><EventRecordID>226839</EventRecordID><Correlation ActivityID='{2EF1732A-5754-0003-CECC-F62E5457D901}'/><Execution ProcessID='15960' ThreadID='18736'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-exch01.attackrange.local</Computer><Security UserID='S-1-5-21-2814101754-3021673353-4211140692-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>Enable-PSRemoting -force</Data><Data Name='ScriptBlockId'>f566c4d4-1b9d-4385-9394-50c6260816d0</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T14:42:23.033021900Z'/><EventRecordID>700543</EventRecordID><Correlation ActivityID='{2E415885-5754-0000-B790-472E5457D901}'/><Execution ProcessID='5832' ThreadID='6008'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-dc01.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>Enable-PSRemoting -SkipNetworkProfileCheck
+</Data><Data Name='ScriptBlockId'>661b1caf-ab5d-4742-83d2-7a231308d912</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T12:31:36.697025100Z'/><EventRecordID>699664</EventRecordID><Correlation ActivityID='{2E415885-5754-0000-BE51-472E5457D901}'/><Execution ProcessID='5832' ThreadID='6008'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-dc01.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>
+function Enable-PSRemoting
+{
+[CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact="Medium")]
+param(
+    [Parameter()] [bool] $Force,
+    [Parameter()] [string] $queryForRegisterDefault,    
+    [Parameter()] [string] $captionForRegisterDefault,
+    [Parameter()] [string] $queryForSet,    
+    [Parameter()] [string] $captionForSet,
+    [Parameter()] [bool] $skipNetworkProfileCheck
+)
+
+    end
+    {
+        # Enable all Session Configurations
+        try {
+            $null = $PSBoundParameters.Remove("queryForRegisterDefault")  
+            $null = $PSBoundParameters.Remove("captionForRegisterDefault") 
+            $null = $PSBoundParameters.Remove("queryForSet")  
+            $null = $PSBoundParameters.Remove("captionForSet")  
+
+            $PSBoundParameters.Add("Name","*")
+
+            # first try to enable all the sessions
+            Enable-PSSessionConfiguration @PSBoundParameters
+
+            # make sure default powershell end points exist 
+            #  ie., Microsoft.PowerShell
+            #       and Microsoft.PowerShell32 (wow64)
+            
+            $errorCount = $error.Count
+            $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+            $newErrorCount = $error.Count
+
+            # remove the 'No Session Configuration matches criteria' errors
+            for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+            {
+                $error.RemoveAt(0)
+            }
+
+            $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell","Register-PSSessionConfiguration Microsoft.PowerShell -force"
+            if ((!$endpoint) -and 
+                ($force  -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)))
+            {
+                $null = Register-PSSessionConfiguration Microsoft.PowerShell -force
+                set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell\Quotas\MaxShellsPerUser -value "25" -confirm:$false
+                set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell\Quotas\MaxIdleTimeoutms -value 2147483647 -confirm:$false
+                restart-service winrm -confirm:$false
+            }  
+
+            # Check Microsoft.PowerShell.Workflow endpoint
+            $errorCount = $error.Count
+            $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell.workflow -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+            $newErrorCount = $error.Count
+
+            # remove the 'No Session Configuration matches criteria' errors
+            for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+            {
+                $error.RemoveAt(0)
+            }
+
+            if (!$endpoint)
+            {
+                $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell.Workflow","Register-PSSessionConfiguration Microsoft.PowerShell.Workflow -force"
+                if ($force -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)) {
+                    $tempxmlfile = [io.path]::Gettempfilename()
+                    "
+&lt;PlugInConfiguration xmlns='http://schemas.microsoft.com/wbem/wsman/1/config/PluginConfiguration'
+    Name='Microsoft.Powershell.Workflow'
+    Filename='%windir%\system32\pwrshplugin.dll'
+    SDKVersion='2'
+    XmlRenderingType='text'
+    UseSharedProcess='true'
+    ProcessIdleTimeoutSec='1209600'
+    OutputBufferingMode='Block'
+    Enabled='True'
+&gt;
+&lt;InitializationParameters&gt;
+&lt;Param Name='PSVersion'  Value='5.1' /&gt;
+&lt;Param Name='AssemblyName' Value='Microsoft.PowerShell.Workflow.ServiceCore, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL'/&gt;
+&lt;Param Name='PSSessionConfigurationTypeName' Value='Microsoft.PowerShell.Workflow.PSWorkflowSessionConfiguration'/&gt;
+&lt;Param Name='SessionConfigurationData'
+    Value ='
+        &amp;lt;SessionConfigurationData&amp;gt;
+            &amp;lt;Param Name=&amp;quot;ModulesToImport&amp;quot; Value=&amp;quot;%windir%\system32\windowspowershell\v1.0\Modules\PSWorkflow&amp;quot; /&amp;gt;
+            &amp;lt;Param Name=&amp;quot;PrivateData&amp;quot;&amp;gt;
+                &amp;lt;PrivateData&amp;gt;
+                    &amp;lt;Param Name=&amp;quot;enablevalidation&amp;quot; Value=&amp;quot;true&amp;quot; /&amp;gt;
+                &amp;lt;/PrivateData&amp;gt;
+            &amp;lt;/Param&amp;gt;
+       &amp;lt;/SessionConfigurationData&amp;gt;
+       '
+/&gt;
+&lt;/InitializationParameters&gt; 
+&lt;Resources&gt;
+    &lt;Resource ResourceUri='http://schemas.microsoft.com/powershell/Microsoft.Powershell.Workflow' SupportsOptions='true' ExactMatch='true'&gt;
+        &lt;Security Uri='http://schemas.microsoft.com/powershell/Microsoft.PowerShell.Workflow' Sddl='O:NSG:BAD:P(D;;GA;;;NU)(A;;GA;;;BA)(A;;GA;;;RM)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)' ExactMatch='False'/&gt;
+        &lt;Capability Type='Shell' /&gt;        
+    &lt;/Resource&gt;
+&lt;/Resources&gt;
+&lt;Quotas MaxMemoryPerShellMB='1024' MaxIdleTimeoutms='2147483647' MaxConcurrentUsers='5' IdleTimeoutms='7200000' MaxProcessesPerShell='15' MaxConcurrentCommandsPerShell='1000' MaxShells='25' MaxShellsPerUser='25' /&gt;
+&lt;/PlugInConfiguration&gt;
+" | out-file -force -filepath $tempxmlfile -confirm:$false
+                    $null = winrm create winrm/config/plugin?Name=Microsoft.PowerShell.Workflow -file:$tempxmlfile
+                    remove-item -path $tempxmlfile -force -confirm:$false
+                    restart-service winrm -confirm:$false
+                }
+            }
+
+            $pa = $env:PROCESSOR_ARCHITECTURE
+            if ($pa -eq "x86")
+            {
+                # on 64-bit platforms, wow64 bit process has the correct architecture
+                # available in processor_architew6432 varialbe
+                $pa = $env:PROCESSOR_ARCHITEW6432
+            }
+            if ((($pa -eq "amd64")) -and (test-path $env:windir\syswow64\pwrshplugin.dll))
+            {
+                # Check availability of WOW64 endpoint. Register if not available.
+                $errorCount = $error.Count
+                $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell32 -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+                $newErrorCount = $error.Count
+
+                # remove the 'No Session Configuration matches criteria' errors
+                for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+                {
+                    $error.RemoveAt(0)
+                }
+
+                $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell32","Register-PSSessionConfiguration Microsoft.PowerShell32 -processorarchitecture x86 -force"
+                if ((!$endpoint) -and 
+                    ($force  -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)))
+                {
+                    $null = Register-PSSessionConfiguration Microsoft.PowerShell32 -processorarchitecture x86 -force
+                    set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell32\Quotas\MaxShellsPerUser -value "25" -confirm:$false
+                    set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell32\Quotas\MaxIdleTimeoutms -value 2147483647 -confirm:$false
+                    restart-service winrm -confirm:$false
+                }
+            }
+
+            # remove the 'network deny all' tag
+            Get-PSSessionConfiguration -Force:$Force | % {
+                $sddl = $null
+                if ($_.psobject.members["SecurityDescriptorSddl"])
+                {
+                    $sddl = $_.psobject.members["SecurityDescriptorSddl"].Value
+                }
+
+                if ($sddl)
+                {
+                    # Construct SID for network users
+                    [system.security.principal.wellknownsidtype]$evst = "NetworkSid"
+                    $networkSID = new-object system.security.principal.securityidentifier $evst,$null
+                    
+                    $securityIdentifierToPurge = $null
+                    $sd = new-object system.security.accesscontrol.commonsecuritydescriptor $false,$false,$sddl
+                    $sd.DiscretionaryAcl | % {
+                        if (($_.acequalifier -eq "accessdenied") -and ($_.securityidentifier -match $networkSID) -and ($_.AccessMask -eq 268435456))
+                        {
+                            $securityIdentifierToPurge = $_.securityidentifier
+                        }
+                    }
+
+                    if ($securityIdentifierToPurge)
+                    {
+                        # Remove the specific ACE
+                        $sd.discretionaryacl.RemoveAccessSpecific('Deny', $securityIdentifierToPurge, 268435456, 'none', 'none')
+
+                        # if there is no discretionaryacl..add Builtin Administrators and Remote Management Users
+                        # to the DACL group as this is the default WSMan behavior
+                        if ($sd.discretionaryacl.count -eq 0)
+                        {
+                            # Built-in administrators.
+                            [system.security.principal.wellknownsidtype]$bast = "BuiltinAdministratorsSid"
+                            $basid = new-object system.security.principal.securityidentifier $bast,$null
+                            $sd.DiscretionaryAcl.AddAccess('Allow',$basid, 268435456, 'none', 'none')
+
+                            # Remote Management Users, Win8+ only
+                            if ([System.Environment]::OSVersion.Version -ge "6.2.0.0")
+                            {
+                                $rmSidId = new-object system.security.principal.securityidentifier "S-1-5-32-580"
+                                $sd.DiscretionaryAcl.AddAccess('Allow', $rmSidId, 268435456, 'none', 'none')
+                            }
+
+                            # Interactive Users
+                            $iaSidId = new-object system.security.principal.securityidentifier "S-1-5-4"
+                            $sd.DiscretionaryAcl.AddAccess('Allow', $iaSidId, 268435456, 'none', 'none')
+                        }
+
+                        $sddl = $sd.GetSddlForm("all")
+                    }
+                } ## end of if($sddl)
+
+                $qMessage = $queryForSet -f $_.name,$sddl
+                if (($sddl) -and ($force -or $pscmdlet.ShouldProcess($qMessage, $captionForSet)))
+                {
+                    $null = Set-PSSessionConfiguration -Name $_.Name -SecurityDescriptorSddl $sddl -NoServiceRestart -force -WarningAction 0
+                }
+            } ## end of foreach-object
+        } 
+        catch {
+            throw
+        }  # end of catch   
+    } # end of end block
+} # end of Enable-PSRemoting
+
+Enable-PSRemoting -force $args[0] -queryForRegisterDefault $args[1] -captionForRegisterDefault $args[2] -queryForSet $args[3] -captionForSet $args[4] -whatif:$args[5] -confirm:$args[6] -skipNetworkProfileCheck $args[7]
+</Data><Data Name='ScriptBlockId'>f7114787-6608-4a43-8ddb-a1fb76af9924</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T12:31:36.685033200Z'/><EventRecordID>699662</EventRecordID><Correlation ActivityID='{2E415885-5754-0000-BD51-472E5457D901}'/><Execution ProcessID='5832' ThreadID='6008'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-dc01.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>enable-PSRemoting -force
+</Data><Data Name='ScriptBlockId'>327f2d88-9773-4092-a854-1f56f4e06017</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T12:26:30.929084300Z'/><EventRecordID>717106</EventRecordID><Correlation ActivityID='{2EDA0009-5754-0000-5666-DF2E5457D901}'/><Execution ProcessID='3168' ThreadID='5484'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>
+function Enable-PSRemoting
+{
+[CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact="Medium")]
+param(
+    [Parameter()] [bool] $Force,
+    [Parameter()] [string] $queryForRegisterDefault,    
+    [Parameter()] [string] $captionForRegisterDefault,
+    [Parameter()] [string] $queryForSet,    
+    [Parameter()] [string] $captionForSet,
+    [Parameter()] [bool] $skipNetworkProfileCheck
+)
+
+    end
+    {
+        # Enable all Session Configurations
+        try {
+            $null = $PSBoundParameters.Remove("queryForRegisterDefault")  
+            $null = $PSBoundParameters.Remove("captionForRegisterDefault") 
+            $null = $PSBoundParameters.Remove("queryForSet")  
+            $null = $PSBoundParameters.Remove("captionForSet")  
+
+            $PSBoundParameters.Add("Name","*")
+
+            # first try to enable all the sessions
+            Enable-PSSessionConfiguration @PSBoundParameters
+
+            # make sure default powershell end points exist 
+            #  ie., Microsoft.PowerShell
+            #       and Microsoft.PowerShell32 (wow64)
+            
+            $errorCount = $error.Count
+            $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+            $newErrorCount = $error.Count
+
+            # remove the 'No Session Configuration matches criteria' errors
+            for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+            {
+                $error.RemoveAt(0)
+            }
+
+            $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell","Register-PSSessionConfiguration Microsoft.PowerShell -force"
+            if ((!$endpoint) -and 
+                ($force  -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)))
+            {
+                $null = Register-PSSessionConfiguration Microsoft.PowerShell -force
+                set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell\Quotas\MaxShellsPerUser -value "25" -confirm:$false
+                set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell\Quotas\MaxIdleTimeoutms -value 2147483647 -confirm:$false
+                restart-service winrm -confirm:$false
+            }  
+
+            # Check Microsoft.PowerShell.Workflow endpoint
+            $errorCount = $error.Count
+            $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell.workflow -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+            $newErrorCount = $error.Count
+
+            # remove the 'No Session Configuration matches criteria' errors
+            for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+            {
+                $error.RemoveAt(0)
+            }
+
+            if (!$endpoint)
+            {
+                $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell.Workflow","Register-PSSessionConfiguration Microsoft.PowerShell.Workflow -force"
+                if ($force -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)) {
+                    $tempxmlfile = [io.path]::Gettempfilename()
+                    "
+&lt;PlugInConfiguration xmlns='http://schemas.microsoft.com/wbem/wsman/1/config/PluginConfiguration'
+    Name='Microsoft.Powershell.Workflow'
+    Filename='%windir%\system32\pwrshplugin.dll'
+    SDKVersion='2'
+    XmlRenderingType='text'
+    UseSharedProcess='true'
+    ProcessIdleTimeoutSec='1209600'
+    OutputBufferingMode='Block'
+    Enabled='True'
+&gt;
+&lt;InitializationParameters&gt;
+&lt;Param Name='PSVersion'  Value='5.1' /&gt;
+&lt;Param Name='AssemblyName' Value='Microsoft.PowerShell.Workflow.ServiceCore, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL'/&gt;
+&lt;Param Name='PSSessionConfigurationTypeName' Value='Microsoft.PowerShell.Workflow.PSWorkflowSessionConfiguration'/&gt;
+&lt;Param Name='SessionConfigurationData'
+    Value ='
+        &amp;lt;SessionConfigurationData&amp;gt;
+            &amp;lt;Param Name=&amp;quot;ModulesToImport&amp;quot; Value=&amp;quot;%windir%\system32\windowspowershell\v1.0\Modules\PSWorkflow&amp;quot; /&amp;gt;
+            &amp;lt;Param Name=&amp;quot;PrivateData&amp;quot;&amp;gt;
+                &amp;lt;PrivateData&amp;gt;
+                    &amp;lt;Param Name=&amp;quot;enablevalidation&amp;quot; Value=&amp;quot;true&amp;quot; /&amp;gt;
+                &amp;lt;/PrivateData&amp;gt;
+            &amp;lt;/Param&amp;gt;
+       &amp;lt;/SessionConfigurationData&amp;gt;
+       '
+/&gt;
+&lt;/InitializationParameters&gt; 
+&lt;Resources&gt;
+    &lt;Resource ResourceUri='http://schemas.microsoft.com/powershell/Microsoft.Powershell.Workflow' SupportsOptions='true' ExactMatch='true'&gt;
+        &lt;Security Uri='http://schemas.microsoft.com/powershell/Microsoft.PowerShell.Workflow' Sddl='O:NSG:BAD:P(D;;GA;;;NU)(A;;GA;;;BA)(A;;GA;;;RM)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)' ExactMatch='False'/&gt;
+        &lt;Capability Type='Shell' /&gt;        
+    &lt;/Resource&gt;
+&lt;/Resources&gt;
+&lt;Quotas MaxMemoryPerShellMB='1024' MaxIdleTimeoutms='2147483647' MaxConcurrentUsers='5' IdleTimeoutms='7200000' MaxProcessesPerShell='15' MaxConcurrentCommandsPerShell='1000' MaxShells='25' MaxShellsPerUser='25' /&gt;
+&lt;/PlugInConfiguration&gt;
+" | out-file -force -filepath $tempxmlfile -confirm:$false
+                    $null = winrm create winrm/config/plugin?Name=Microsoft.PowerShell.Workflow -file:$tempxmlfile
+                    remove-item -path $tempxmlfile -force -confirm:$false
+                    restart-service winrm -confirm:$false
+                }
+            }
+
+            $pa = $env:PROCESSOR_ARCHITECTURE
+            if ($pa -eq "x86")
+            {
+                # on 64-bit platforms, wow64 bit process has the correct architecture
+                # available in processor_architew6432 varialbe
+                $pa = $env:PROCESSOR_ARCHITEW6432
+            }
+            if ((($pa -eq "amd64")) -and (test-path $env:windir\syswow64\pwrshplugin.dll))
+            {
+                # Check availability of WOW64 endpoint. Register if not available.
+                $errorCount = $error.Count
+                $endPoint = Get-PSSessionConfiguration Microsoft.PowerShell32 -Force:$Force -ErrorAction silentlycontinue 2&gt;&amp;1
+                $newErrorCount = $error.Count
+
+                # remove the 'No Session Configuration matches criteria' errors
+                for ($index = 0; $index -lt ($newErrorCount - $errorCount); $index ++)
+                {
+                    $error.RemoveAt(0)
+                }
+
+                $qMessage = $queryForRegisterDefault -f "Microsoft.PowerShell32","Register-PSSessionConfiguration Microsoft.PowerShell32 -processorarchitecture x86 -force"
+                if ((!$endpoint) -and 
+                    ($force  -or $pscmdlet.ShouldProcess($qMessage, $captionForRegisterDefault)))
+                {
+                    $null = Register-PSSessionConfiguration Microsoft.PowerShell32 -processorarchitecture x86 -force
+                    set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell32\Quotas\MaxShellsPerUser -value "25" -confirm:$false
+                    set-item -WarningAction SilentlyContinue wsman:\localhost\plugin\Microsoft.PowerShell32\Quotas\MaxIdleTimeoutms -value 2147483647 -confirm:$false
+                    restart-service winrm -confirm:$false
+                }
+            }
+
+            # remove the 'network deny all' tag
+            Get-PSSessionConfiguration -Force:$Force | % {
+                $sddl = $null
+                if ($_.psobject.members["SecurityDescriptorSddl"])
+                {
+                    $sddl = $_.psobject.members["SecurityDescriptorSddl"].Value
+                }
+
+                if ($sddl)
+                {
+                    # Construct SID for network users
+                    [system.security.principal.wellknownsidtype]$evst = "NetworkSid"
+                    $networkSID = new-object system.security.principal.securityidentifier $evst,$null
+                    
+                    $securityIdentifierToPurge = $null
+                    $sd = new-object system.security.accesscontrol.commonsecuritydescriptor $false,$false,$sddl
+                    $sd.DiscretionaryAcl | % {
+                        if (($_.acequalifier -eq "accessdenied") -and ($_.securityidentifier -match $networkSID) -and ($_.AccessMask -eq 268435456))
+                        {
+                            $securityIdentifierToPurge = $_.securityidentifier
+                        }
+                    }
+
+                    if ($securityIdentifierToPurge)
+                    {
+                        # Remove the specific ACE
+                        $sd.discretionaryacl.RemoveAccessSpecific('Deny', $securityIdentifierToPurge, 268435456, 'none', 'none')
+
+                        # if there is no discretionaryacl..add Builtin Administrators and Remote Management Users
+                        # to the DACL group as this is the default WSMan behavior
+                        if ($sd.discretionaryacl.count -eq 0)
+                        {
+                            # Built-in administrators.
+                            [system.security.principal.wellknownsidtype]$bast = "BuiltinAdministratorsSid"
+                            $basid = new-object system.security.principal.securityidentifier $bast,$null
+                            $sd.DiscretionaryAcl.AddAccess('Allow',$basid, 268435456, 'none', 'none')
+
+                            # Remote Management Users, Win8+ only
+                            if ([System.Environment]::OSVersion.Version -ge "6.2.0.0")
+                            {
+                                $rmSidId = new-object system.security.principal.securityidentifier "S-1-5-32-580"
+                                $sd.DiscretionaryAcl.AddAccess('Allow', $rmSidId, 268435456, 'none', 'none')
+                            }
+
+                            # Interactive Users
+                            $iaSidId = new-object system.security.principal.securityidentifier "S-1-5-4"
+                            $sd.DiscretionaryAcl.AddAccess('Allow', $iaSidId, 268435456, 'none', 'none')
+                        }
+
+                        $sddl = $sd.GetSddlForm("all")
+                    }
+                } ## end of if($sddl)
+
+                $qMessage = $queryForSet -f $_.name,$sddl
+                if (($sddl) -and ($force -or $pscmdlet.ShouldProcess($qMessage, $captionForSet)))
+                {
+                    $null = Set-PSSessionConfiguration -Name $_.Name -SecurityDescriptorSddl $sddl -NoServiceRestart -force -WarningAction 0
+                }
+            } ## end of foreach-object
+        } 
+        catch {
+            throw
+        }  # end of catch   
+    } # end of end block
+} # end of Enable-PSRemoting
+
+Enable-PSRemoting -force $args[0] -queryForRegisterDefault $args[1] -captionForRegisterDefault $args[2] -queryForSet $args[3] -captionForSet $args[4] -whatif:$args[5] -confirm:$args[6] -skipNetworkProfileCheck $args[7]
+</Data><Data Name='ScriptBlockId'>3a315d9f-035a-4a75-859d-9b389465187a</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-20T12:26:30.920010000Z'/><EventRecordID>717104</EventRecordID><Correlation ActivityID='{2EDA0009-5754-0001-D5CB-DE2E5457D901}'/><Execution ProcessID='3168' ThreadID='5484'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>enable-PSRemoting -force
+</Data><Data Name='ScriptBlockId'>42f593dd-145b-473b-afac-6eb141fc9ffa</Data><Data Name='Path'></Data></EventData></Event>

@@ -1,0 +1,19 @@
+author: Patrick Bareiss
+id: cc9b2620-efc9-11eb-926b-550bf0943fbb
+date: '2020-11-09'
+description: 'Atomic Test Results: Successful Execution of test T1490-1 Windows -
+  Delete Volume Shadow Copies Successful Execution of test T1490-2 Windows - Delete
+  Volume Shadow Copies via WMI Return value unclear for test T1490-3 Windows - Delete
+  Windows Backup Catalog Successful Execution of test T1490-4 Windows - Disable Windows
+  Recovery Console Repair Return value unclear for test T1490-5 Windows - Delete Volume
+  Shadow Copies via WMI with PowerShell Successful Execution of test T1490-6 Windows
+  - Delete Backup Files '
+environment: attack_range
+directory: ransomware_notes
+mitre_technique:
+- T1490
+datasets:
+- name: windows-sysmon
+  path: /datasets/attack_techniques/T1490/ransomware_notes/windows-sysmon.log
+  sourcetype: XmlWinEventLog
+  source: XmlWinEventLog:Microsoft-Windows-Sysmon/Operational

