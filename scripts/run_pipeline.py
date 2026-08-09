@@ -53,6 +53,17 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=ROOT / "data/processed/sysmon_attack_windows.csv")
     parser.add_argument("--window-seconds", type=int, default=5)
     args = parser.parse_args()
+    if not args.input.exists() or (args.input.is_dir() and not list(args.input.rglob("windows-sysmon.log"))):
+        if args.output.exists():
+            df_existing = pd.read_csv(args.output)
+            print(f"Raw Splunk logs directory not found at {args.input}.\n"
+                  f"Using pre-processed attack windows dataset at {args.output} ({len(df_existing)} rows).")
+            return
+        else:
+            raise FileNotFoundError(
+                f"Raw Splunk logs directory not found at {args.input} and pre-processed dataset {args.output} is missing.\n"
+                "Please pull the latest repository changes."
+            )
     attack_inputs = sorted(args.input.rglob("windows-sysmon.log")) if args.input.is_dir() else [args.input]
     dataset = build_dataset(attack_inputs, args.window_seconds, label=1, source_kind="attack")
     benign_frames = []
@@ -63,6 +74,10 @@ def main() -> None:
     if benign_frames:
         dataset = pd.concat([dataset, *benign_frames], ignore_index=True)
     if dataset.empty:
+        if args.output.exists():
+            df_existing = pd.read_csv(args.output)
+            print(f"Using pre-processed attack windows dataset at {args.output} ({len(df_existing)} rows).")
+            return
         raise SystemExit("No supported Sysmon events were found.")
     _, columns = vectorize(dataset)
     args.output.parent.mkdir(parents=True, exist_ok=True)

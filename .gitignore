@@ -8,11 +8,14 @@ data/raw/*
 data/processed/*
 data/datasets/*
 
-# Un-ignore processed datasets & model artifacts needed for instant execution
+# Un-ignore processed datasets & SILRAD dataset & model artifacts needed for instant execution
 !data/processed/sysmon_attack_windows.csv
 !data/processed/sysmon_combined_windows.csv
 !data/processed/sysmon_windows.csv
 !data/processed/dry_run_alerts.json
+
+!data/datasets/silrad/
+!data/datasets/silrad/fasttext-all-nofamily.csv
 
 !data/models/
 !data/models/baseline_models.joblib
