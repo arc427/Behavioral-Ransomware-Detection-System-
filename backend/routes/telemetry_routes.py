@@ -138,17 +138,14 @@ def score_live():
             .limit(30).all()
         history.reverse() # Sort ascending
         
-        # Require minimum 15 distinct windows before trusting LSTM scores.
-        # With fewer windows, the mean-vector padding (to fill 30 steps)
-        # creates repeated identical rows that the model misinterprets as
-        # ransomware repetition patterns, producing false 1.00 scores.
-        if len(history) >= 15:
-            rows = [h.to_dict() for h in history]
-            df = pd.DataFrame(rows)
-            try:
-                lstm_score = float(lstm_infer.score_sequence(df))
-            except Exception as e:
-                current_app.logger.error(f"LSTM inference error: {e}")
+        # With zero-padding fixed in the infer logic, the model correctly handles
+        # sequences shorter than 30 steps without hallucinating.
+        rows = [h.to_dict() for h in history]
+        df = pd.DataFrame(rows)
+        try:
+            lstm_score = float(lstm_infer.score_sequence(df))
+        except Exception as e:
+            current_app.logger.error(f"LSTM inference error: {e}")
                 
     # Update FeatureVector risk_score
     vec.risk_score = lstm_score
