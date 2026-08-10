@@ -119,7 +119,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${API_BASE}/api/alerts`);
             const data = await response.json();
             
-            if (data.items !== undefined && data.items.length > 0) {
+            if (data.items !== undefined) {
+                if (data.items.length === 0) {
+                    activeIncidents = [];
+                    renderIncidents();
+                    return;
+                }
+                
                 // Preserve local containment state
                 const oldIncidents = new Map(activeIncidents.map(inc => [inc.id, inc.status]));
                 const autoContainToggle = document.getElementById('auto-contain-toggle');
