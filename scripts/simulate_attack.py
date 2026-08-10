@@ -30,7 +30,7 @@ def main():
     parser = argparse.ArgumentParser(description="Simulate a ransomware attack on the live dashboard.")
     parser.add_argument("--family", type=str, choices=list(FAMILY_MAP.keys()), default="samsam",
                         help="The ransomware family trace to replay.")
-    parser.add_argument("--delay", type=float, default=2.0,
+    parser.add_argument("--delay", type=float, default=1.0,
                         help="Seconds to wait between sending each telemetry window.")
     args = parser.parse_args()
 
@@ -42,10 +42,16 @@ def main():
     df = pd.read_csv(DATA_PATH)
     
     source_path = FAMILY_MAP[args.family]
-    attack_windows = df[df["source"] == source_path].sort_values("window_start")
+    # Use string contains to match the source robustly across OS paths
+    attack_windows = df[df["source"].str.contains(Path(source_path).name, regex=False, na=False)].sort_values("window_start")
     
     if attack_windows.empty:
-        print(f"[!] Error: No data found for family {args.family}")
+        # Fallback to checking the parent directory name if the file name alone is ambiguous
+        parent_dir = Path(source_path).parent.name
+        attack_windows = df[df["source"].str.contains(parent_dir, regex=False, na=False)].sort_values("window_start")
+
+    if attack_windows.empty:
+        print(f"[!] Error: No data found for family {args.family} using path {source_path}")
         return
 
     print(f"[*] Found {len(attack_windows)} telemetry windows for {args.family}.")

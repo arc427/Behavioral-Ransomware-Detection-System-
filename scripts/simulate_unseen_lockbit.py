@@ -73,7 +73,7 @@ def main():
         "X-API-Key": API_KEY
     }
 
-    print(f"[*] Beginning live simulation. Sending to {API_URL} every 2 seconds...")
+    print(f"[*] Beginning live simulation. Sending to {API_URL} every 1 second...")
     print(f"[*] Open your dashboard at http://127.0.0.1:5000/ to watch the zero-day attack.\n")
 
     for idx, features in enumerate(trace, 1):
@@ -102,7 +102,7 @@ def main():
         except requests.exceptions.RequestException as e:
             print(f"[!] Connection failed: {e}. Is the backend running?")
             
-        time.sleep(2.0)
+        time.sleep(1.0)
         
     print("\n[*] Simulation complete.")
 

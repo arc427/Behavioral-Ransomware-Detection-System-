@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${API_BASE}/api/alerts`);
             const data = await response.json();
             
-            if (data.items !== undefined) {
+            if (data.items !== undefined && data.items.length > 0) {
                 activeIncidents = data.items.map(item => ({
                     id: item.window_start || item.timestamp,
                     timestamp: item.timestamp || Date.now(),
@@ -130,6 +130,33 @@ document.addEventListener("DOMContentLoaded", () => {
                     status: item.status || 'ACTIVE'
                 }));
                 renderIncidents();
+                
+                // Trigger Containment UI for the most recent incident if it crossed threshold
+                const latestIncident = activeIncidents[0];
+                if (latestIncident && latestIncident.risk_score >= 0.85) {
+                    const autoContainToggle = document.getElementById('auto-contain-toggle');
+                    const containmentDot = document.getElementById('containment-dot');
+                    const containmentStatusText = document.getElementById('containment-status-text');
+                    
+                    if (autoContainToggle && autoContainToggle.checked) {
+                        // Only show toast if it's a new incident we haven't toasted yet
+                        if (!window.lastToastedIncidentId || window.lastToastedIncidentId !== latestIncident.id) {
+                            window.lastToastedIncidentId = latestIncident.id;
+                            setTimeout(() => showToast(latestIncident), 500);
+                        }
+                        if (containmentDot) containmentDot.className = 'dot danger';
+                        if (containmentStatusText) {
+                            containmentStatusText.innerText = 'Host Isolated (Auto Containment)';
+                            containmentStatusText.style.color = 'var(--accent-crimson)';
+                        }
+                    } else {
+                        if (containmentDot) containmentDot.className = 'dot danger';
+                        if (containmentStatusText) {
+                            containmentStatusText.innerText = 'Critical: Active Threat Detected (Containment Required)';
+                            containmentStatusText.style.color = 'var(--accent-crimson)';
+                        }
+                    }
+                }
                 return;
             }
         } catch (e) {
