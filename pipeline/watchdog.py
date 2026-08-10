@@ -113,7 +113,7 @@ def fetch_live_sysmon_events() -> list[dict]:
 def fetch_live_system_process_windows() -> list[dict]:
     """Fallback generator capturing active live system processes if Sysmon is not active yet."""
     cmd = ["powershell.exe", "-NoProfile", "-Command", 
-           "Get-Process | Select-Object -First 10 Id, ProcessName, Handles, CPU | ConvertTo-Json"]
+           "Get-Process | Select-Object -First 10 Id, ProcessName, Handles, WorkingSet64 | ConvertTo-Json"]
     try:
         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
         procs = json.loads(res.stdout or "[]")
@@ -127,23 +127,30 @@ def fetch_live_system_process_windows() -> list[dict]:
         for proc in procs:
             pname = str(proc.get("ProcessName") or "system").lower() + ".exe"
             pid = proc.get("Id") or 1000
+            handles = int(proc.get("Handles") or 0)
+            mem_bytes = int(proc.get("WorkingSet64") or 0)
             
-            # Construct a clean 17-feature vector for live process monitoring
+            # Derive realistic feature counts from actual process metrics
+            # High handle count = more event activity; low = idle background process
+            event_count = max(1, min(handles // 50, 20))
+            file_activity = max(0, min(handles // 200, 5))
+            registry_activity = max(0, min(handles // 300, 3))
+            
             features = {
-                "event_count": 5,
+                "event_count": event_count,
                 "unique_images": 1,
-                "unique_files": 2,
+                "unique_files": file_activity,
                 "unique_extensions": 0,
                 "unique_destination_ips": 0,
                 "suspicious_path_count": 0,
-                "file_activity_count": 1,
-                "registry_activity_count": 0,
+                "file_activity_count": file_activity,
+                "registry_activity_count": registry_activity,
                 "network_activity_count": 0,
                 "event_1_count": 1,
                 "event_3_count": 0,
                 "event_7_count": 0,
-                "event_11_count": 1,
-                "event_12_count": 0,
+                "event_11_count": file_activity,
+                "event_12_count": registry_activity,
                 "event_13_count": 0,
                 "event_23_count": 0,
                 "event_26_count": 0
@@ -154,9 +161,9 @@ def fetch_live_system_process_windows() -> list[dict]:
                 "process_key": f"{pname}:{pid}",
                 "window_start": now_iso,
                 "label": 0,
-                "technique_id": "T1059.001",
+                "technique_id": "benign",
                 "scenario": "live-monitoring",
-                "source": "live-sysmon",
+                "source": "live-endpoint",
                 "features": features
             }
             windows.append(record)
