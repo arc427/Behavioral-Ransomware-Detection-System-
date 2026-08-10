@@ -108,7 +108,22 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${API_BASE}/api/telemetry?limit=30`);
             const data = await response.json();
             
-            if (data.items && data.items.length > 0) {
+            if (data.items !== undefined) {
+                if (data.items.length === 0) {
+                    // Empty database: show clean 0.00 baseline
+                    riskChart.data.labels = Array(30).fill('');
+                    riskChart.data.datasets[0].data = Array(30).fill(0.00);
+                    riskChart.data.datasets[1].data = Array(30).fill(0.60);
+                    riskChart.data.datasets[2].data = Array(30).fill(0.85);
+                    riskChart.update();
+
+                    document.getElementById('metric-total-events').innerText = '0';
+                    document.getElementById('metric-avg-risk').innerText = '0.00';
+                    const avgRiskEl = document.getElementById('metric-avg-risk');
+                    avgRiskEl.className = 'metric-value mint';
+                    return;
+                }
+
                 // Reverse items if they are returned newest-first, to show chronologically
                 const items = [...data.items].reverse();
                 
@@ -124,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 riskChart.update();
                 
                 // Update metrics summary
-                document.getElementById('metric-total-events').innerText = data.total || items.length;
+                document.getElementById('metric-total-events').innerText = data.total !== undefined ? data.total : items.length;
                 const avgRisk = riskData.reduce((a, b) => a + b, 0) / riskData.length;
                 document.getElementById('metric-avg-risk').innerText = avgRisk.toFixed(2);
                 

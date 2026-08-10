@@ -5,8 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalEventsEl = document.getElementById('metric-total-events');
     const anomaliesEl = document.getElementById('metric-anomalies');
     
-    let totalProcessed = 24150;
-    let anomalyCount = 142;
+    let totalProcessed = 0;
+    let anomalyCount = 0;
     
     // Formats ISO or Epoch timestamp into local HH:MM:SS
     function formatTime(val) {
@@ -85,7 +85,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${API_BASE}/api/telemetry?limit=15`);
             const data = await response.json();
             
-            if (data.items && data.items.length > 0) {
+            if (data.items !== undefined) {
+                if (data.items.length === 0) {
+                    logContainer.innerHTML = '<div style="color: var(--text-dim); text-align: center; padding: 2rem; font-size: 0.85rem;">Waiting for live VM telemetry...</div>';
+                    rateBadge.innerText = '0.0 ev/s';
+                    totalEventsEl.innerText = '0';
+                    anomaliesEl.innerText = '0';
+                    return;
+                }
+
                 // Clear and repopulate to represent latest sliding window
                 logContainer.innerHTML = '';
                 
@@ -102,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
                 
-                anomaliesEl.innerText = Math.max(anomalies, parseInt(anomaliesEl.innerText || 0));
+                anomaliesEl.innerText = anomalies;
                 return;
             }
         } catch (e) {

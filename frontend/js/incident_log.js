@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${API_BASE}/api/alerts`);
             const data = await response.json();
             
-            if (data.items && data.items.length > 0) {
+            if (data.items !== undefined) {
                 activeIncidents = data.items.map(item => ({
                     id: item.window_start || item.timestamp,
                     timestamp: item.timestamp || Date.now(),
