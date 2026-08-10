@@ -126,7 +126,9 @@ def score_live():
     event_count = features.get("event_count", 0)
     file_act = features.get("file_activity_count", 0)
     reg_act = features.get("registry_activity_count", 0)
-    is_low_activity = (event_count < 5 and file_act < 3 and reg_act < 3)
+    # The LSTM model hallucinates high risk for event_count < 15 when file/reg activity is 0.
+    # Ransomware encrypts heavily, so it will rapidly exceed file_act >= 3.
+    is_low_activity = (event_count < 15 and file_act < 3 and reg_act < 3)
     
     if lstm_infer and not is_benign_source and not is_low_activity:
         # Fetch the last 30 windows for this host (chronologically sorted)
