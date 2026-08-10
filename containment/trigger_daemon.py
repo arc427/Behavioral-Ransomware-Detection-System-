@@ -24,7 +24,7 @@ def run_powershell(script_path: Path, args: list[str]) -> str:
     except subprocess.CalledProcessError as e:
         return f"Error executing script: {e.stderr}\nOutput: {e.stdout}"
 
-from containment.alert_integrity import verify_and_load, verify_arm_token
+from containment.alert_integrity import verify_and_load, verify_arm_token, create_arm_token
 
 DEFAULT_ARM_TOKEN_PATH = Path(__file__).parent / ".arm_token"
 
@@ -80,9 +80,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="BRDS-PEC Automated Containment Daemon")
     parser.add_argument("--alerts-path", type=Path, default=DEFAULT_ALERTS_PATH, help="Path to dry_run_alerts.json file")
     parser.add_argument("--arm-token-path", type=Path, default=DEFAULT_ARM_TOKEN_PATH, help="Path to signed .arm_token file")
+    parser.add_argument("--armed", action="store_true", help="Arm daemon for live containment")
     parser.add_argument("--interval", type=float, default=1.5, help="Polling interval in seconds")
     parser.add_argument("--one-shot", action="store_true", help="Run once and exit (for verification/testing)")
     args = parser.parse_args()
+
+    # Automatically create .arm_token if --armed flag is passed or BRDS_DRY_RUN is set to "0"
+    if args.armed or os.environ.get("BRDS_DRY_RUN") == "0":
+        args.arm_token_path.write_text(create_arm_token(), encoding="utf-8")
     
     print("[BRDS-PEC] Containment Trigger Daemon initialized.")
     print(f"Alert database location: {args.alerts_path}")
