@@ -45,8 +45,10 @@ def create_app(overrides: dict | None = None) -> Flask:
     if app.config.get("TESTING") and (not overrides or "SQLALCHEMY_DATABASE_URI" not in overrides):
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     
-    # Initialize database
+    # Initialize database and ensure all tables exist on startup
     db.init_app(app)
+    with app.app_context():
+        db.create_all()
     
     # Load LSTM sequence model
     lstm_path = app.config.get("LSTM_MODEL_PATH")

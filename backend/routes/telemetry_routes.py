@@ -41,7 +41,7 @@ def telemetry():
         db_available = False
         total = 0
     
-    if db_available and not use_offline:
+    if db_available and total > 0 and not use_offline:
         # Query strictly from SQL database
         for query_name, field in (("host", FeatureVector.computer), 
                                    ("technique", FeatureVector.technique_id), 
@@ -51,7 +51,6 @@ def telemetry():
                 query = query.filter(field.ilike(f"%{_safe_like(value)}%", escape="\\"))
                 
         total = query.count()
-        query = query.order_by(FeatureVector.window_start.desc())
         limit, offset = _page_args()
         vectors = query.offset(offset).limit(limit).all()
         items = [v.to_dict() for v in vectors]

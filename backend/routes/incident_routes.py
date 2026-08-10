@@ -39,7 +39,7 @@ def alerts():
         db_available = False
         total = 0
     
-    if db_available and not use_offline:
+    if db_available and total > 0 and not use_offline:
         # Query strictly from SQL database
         for query_name, field in (("host", Incident.computer), 
                                    ("technique", Incident.ransomware_family)):

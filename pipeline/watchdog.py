@@ -62,6 +62,7 @@ class TelemetryWatchdog:
         """Send a 5-second feature window vector to the Flask /api/score/live endpoint."""
         headers = {
             "Content-Type": "application/json",
+            "X-BRDS-API-Key": "dev-key-123",
             "X-API-Key": "dev-key-123"
         }
         data_bytes = json.dumps(window_record).encode("utf-8")
