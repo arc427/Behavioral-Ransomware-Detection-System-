@@ -128,7 +128,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 const items = [...data.items].reverse();
                 
                 // Get risk scores
-                const riskData = items.map(item => item.risk_score !== undefined ? item.risk_score : 0.05);
+                const rawRiskData = items.map(item => item.risk_score !== undefined ? item.risk_score : 0.05);
+                
+                // Smooth the curve using a rolling maximum (last 3 items)
+                // This prevents the graph from instantly dropping to 0 when benign telemetry (e.g. Chrome) 
+                // is interleaved with malicious telemetry in the backend database.
+                const riskData = rawRiskData.map((val, idx, arr) => {
+                    const windowStart = Math.max(0, idx - 2);
+                    return Math.max(...arr.slice(windowStart, idx + 1));
+                });
+                
                 const labels = items.map((_, i) => `W-${items.length - i}`);
                 
                 // Update chart

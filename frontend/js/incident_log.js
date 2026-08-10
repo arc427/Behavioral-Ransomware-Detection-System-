@@ -120,33 +120,53 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await response.json();
             
             if (data.items !== undefined && data.items.length > 0) {
-                activeIncidents = data.items.map(item => ({
-                    id: item.window_start || item.timestamp,
-                    timestamp: item.timestamp || Date.now(),
-                    computer: item.computer || 'BRDS-WIN11-SEC',
-                    ransomware_family: item.technique_id || 'Ransomware',
-                    risk_score: item.risk_score || 0.90,
-                    process_id: item.process_key ? item.process_key.split(':').pop() : '9024',
-                    status: item.status || 'ACTIVE'
-                }));
+                // Preserve local containment state
+                const oldIncidents = new Map(activeIncidents.map(inc => [inc.id, inc.status]));
+                const autoContainToggle = document.getElementById('auto-contain-toggle');
+                const isAutoOn = autoContainToggle && autoContainToggle.checked;
+
+                activeIncidents = data.items.map(item => {
+                    const id = item.window_start || item.timestamp;
+                    let status = item.status || 'ACTIVE';
+                    
+                    // If we locally contained it, keep it contained
+                    if (oldIncidents.has(id) && oldIncidents.get(id).includes('CONTAINED')) {
+                        status = oldIncidents.get(id);
+                    } 
+                    // If it's a new high-risk alert and auto-contain is on, immediately contain it locally
+                    else if (isAutoOn && (item.risk_score || 0) >= 0.85) {
+                        status = 'CONTAINED (AUTO)';
+                    }
+                    
+                    return {
+                        id: id,
+                        timestamp: item.timestamp || Date.now(),
+                        computer: item.computer || 'BRDS-WIN11-SEC',
+                        ransomware_family: item.technique_id || 'Ransomware',
+                        risk_score: item.risk_score || 0.90,
+                        process_id: item.process_key ? item.process_key.split(':').pop() : '9024',
+                        status: status
+                    };
+                });
                 renderIncidents();
                 
                 // Trigger Containment UI for the most recent incident if it crossed threshold
                 const latestIncident = activeIncidents[0];
                 if (latestIncident && latestIncident.risk_score >= 0.85) {
-                    const autoContainToggle = document.getElementById('auto-contain-toggle');
                     const containmentDot = document.getElementById('containment-dot');
                     const containmentStatusText = document.getElementById('containment-status-text');
                     
-                    if (autoContainToggle && autoContainToggle.checked) {
-                        // Only show toast and trigger isolation if it's a new incident we haven't handled yet
+                    if (isAutoOn) {
+                        // Only show toast if it's a new incident we haven't handled yet
                         if (!window.lastToastedIncidentId || window.lastToastedIncidentId !== latestIncident.id) {
                             window.lastToastedIncidentId = latestIncident.id;
                             setTimeout(() => {
                                 showToast(latestIncident);
-                                isolateHost(latestIncident.id, true);
                             }, 500);
                         }
+                        // Note: isolateHost DOM updates are no longer needed here because renderIncidents() 
+                        // correctly omits the button for status 'CONTAINED (AUTO)'
+                        
                         if (containmentDot) containmentDot.className = 'dot danger';
                         if (containmentStatusText) {
                             containmentStatusText.innerText = 'Host Isolated (Auto Containment)';
