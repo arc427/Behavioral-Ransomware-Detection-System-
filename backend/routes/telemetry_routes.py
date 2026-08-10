@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pandas as pd
 from flask import Blueprint, current_app, jsonify, request
-
-
-from backend.models.feature_vectors import FeatureVector
-
-
 from sqlalchemy.exc import OperationalError
+
+from backend.auth import require_api_key
+from backend.models.feature_vectors import FeatureVector
 
 telemetry_bp = Blueprint("telemetry", __name__)
 
@@ -32,15 +31,18 @@ def _safe_like(value: str) -> str:
 
 @telemetry_bp.get("/api/telemetry")
 def telemetry():
+    use_offline = (os.environ.get("BRDS_USE_OFFLINE_BENCHMARK") == "1")
+    
     try:
         query = FeatureVector.query
         total = query.count()
-        use_sql = (total > 0)
+        db_available = True
     except OperationalError:
-        use_sql = False
+        db_available = False
+        total = 0
     
-    if use_sql:
-        # Query from SQL database
+    if db_available and not use_offline:
+        # Query strictly from SQL database
         for query_name, field in (("host", FeatureVector.computer), 
                                    ("technique", FeatureVector.technique_id), 
                                    ("source", FeatureVector.source)):
@@ -53,10 +55,10 @@ def telemetry():
         vectors = query.offset(offset).limit(limit).all()
         items = [v.to_dict() for v in vectors]
     else:
-        # Fallback to CSV file reading
+        # Fallback to CSV file reading only when explicitly requested
         path = Path(current_app.config["TELEMETRY_PATH"])
         if not path.exists():
-            return jsonify({"items": [], "total": 0, "message": "No windowed telemetry dataset is available."})
+            return jsonify({"items": [], "total": 0, "message": "No telemetry data available."})
         frame = pd.read_csv(path)
         for query_name, column in (("host", "computer"), ("technique", "technique_id"), ("source", "source")):
             value = request.args.get(query_name)
@@ -68,9 +70,6 @@ def telemetry():
         total = len(frame)
         
     return jsonify({"items": items, "total": total, "limit": limit, "offset": offset})
-
-
-from backend.auth import require_api_key
 
 
 @telemetry_bp.post("/api/score/live")
@@ -133,8 +132,7 @@ def score_live():
     # Update FeatureVector risk_score
     vec.risk_score = lstm_score
     
-    # 3. Create a signed dry-run alert if score >= 0.85. Containment is handled
-    # separately and this endpoint never claims that the host was isolated.
+    # 3. Create a signed dry-run alert if score >= 0.85
     alert_created = False
     if lstm_score >= 0.85:
         existing = Incident.query.filter_by(timestamp=window_start, computer=computer).first()

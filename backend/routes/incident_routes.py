@@ -3,22 +3,18 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, request
-
-from .telemetry_routes import _page_args, _safe_like
-
+from sqlalchemy.exc import OperationalError
 
 from backend.models.incidents import Incident
-
-
-from sqlalchemy.exc import OperationalError
+from containment.alert_integrity import verify_and_load
+from .telemetry_routes import _page_args, _safe_like
 
 incident_bp = Blueprint("incidents", __name__)
 
-
-from containment.alert_integrity import verify_and_load
 
 def _alerts() -> list[dict]:
     path = Path(current_app.config["ALERTS_PATH"])
@@ -33,15 +29,18 @@ def _alerts() -> list[dict]:
 @incident_bp.get("/api/alerts")
 @incident_bp.get("/api/incidents")
 def alerts():
+    use_offline = (os.environ.get("BRDS_USE_OFFLINE_BENCHMARK") == "1")
+    
     try:
         query = Incident.query
         total = query.count()
-        use_sql = (total > 0)
+        db_available = True
     except OperationalError:
-        use_sql = False
+        db_available = False
+        total = 0
     
-    if use_sql:
-        # Query from SQL database
+    if db_available and not use_offline:
+        # Query strictly from SQL database
         for query_name, field in (("host", Incident.computer), 
                                    ("technique", Incident.ransomware_family)):
             value = request.args.get(query_name)
@@ -61,7 +60,7 @@ def alerts():
         incidents = query.offset(offset).limit(limit).all()
         items = [inc.to_dict() for inc in incidents]
     else:
-        # Fallback to JSON file reading
+        # Fallback to JSON file reading only when explicitly requested
         items = _alerts()
         for name in ("host", "technique", "scenario"):
             value = request.args.get(name)
