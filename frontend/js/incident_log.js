@@ -139,10 +139,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     const containmentStatusText = document.getElementById('containment-status-text');
                     
                     if (autoContainToggle && autoContainToggle.checked) {
-                        // Only show toast if it's a new incident we haven't toasted yet
+                        // Only show toast and trigger isolation if it's a new incident we haven't handled yet
                         if (!window.lastToastedIncidentId || window.lastToastedIncidentId !== latestIncident.id) {
                             window.lastToastedIncidentId = latestIncident.id;
-                            setTimeout(() => showToast(latestIncident), 500);
+                            setTimeout(() => {
+                                showToast(latestIncident);
+                                isolateHost(latestIncident.id, true);
+                            }, 500);
                         }
                         if (containmentDot) containmentDot.className = 'dot danger';
                         if (containmentStatusText) {
