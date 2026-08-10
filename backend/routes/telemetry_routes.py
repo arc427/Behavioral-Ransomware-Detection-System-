@@ -119,7 +119,16 @@ def score_live():
     technique = str(data.get("technique_id", "unknown"))
     is_benign_source = (technique.lower() in ("benign", "unknown", "monitoring", "live-monitoring"))
     
-    if lstm_infer and not is_benign_source:
+    # Gate check: Skip LSTM scoring for low-activity/idle windows to prevent false positives.
+    # Due to training data limitations (where benign traces always had exactly 10 events),
+    # the standardized features for low-activity/idle processes become massive outliers
+    # that confuse the model, causing false 1.00 risk scores.
+    event_count = features.get("event_count", 0)
+    file_act = features.get("file_activity_count", 0)
+    reg_act = features.get("registry_activity_count", 0)
+    is_low_activity = (event_count < 5 and file_act < 3 and reg_act < 3)
+    
+    if lstm_infer and not is_benign_source and not is_low_activity:
         # Fetch the last 30 windows for this host (chronologically sorted)
         history = FeatureVector.query.filter(FeatureVector.computer == computer)\
             .filter(FeatureVector.window_start <= window_start)\

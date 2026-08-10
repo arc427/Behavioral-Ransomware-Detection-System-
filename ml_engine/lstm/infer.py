@@ -78,13 +78,9 @@ class LSTMInfer:
             # Take the latest 30 steps
             features_scaled = features_scaled[-seq_len:]
         elif len(features_scaled) < seq_len:
-            # Front-pad short sequences with feature mean vector to prevent artificially depressing risk scores
+            # Front-pad short sequences with zeros to match training dataset preparation format
             missing_steps = seq_len - len(features_scaled)
-            if len(features_scaled) > 0:
-                mean_vec = np.mean(features_scaled, axis=0)
-            else:
-                mean_vec = np.zeros(self.input_dim)
-            padding = np.tile(mean_vec, (missing_steps, 1))
+            padding = np.zeros((missing_steps, self.input_dim))
             features_scaled = np.vstack((padding, features_scaled))
             
         # Convert to tensor and insert batch dimension: shape (1, 30, input_dim)
