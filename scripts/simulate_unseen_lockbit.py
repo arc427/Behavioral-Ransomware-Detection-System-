@@ -54,12 +54,12 @@ def generate_lockbit_trace():
     # LockBit encrypts incredibly fast and drops a .lockbit extension.
     for i in range(25):
         f = base_features()
-        f['event_count'] = 450 + (i * 10)
-        f['file_activity_count'] = 400 + (i * 10)
-        f['unique_files'] = 390
+        f['event_count'] = 6 + (i % 3)
+        f['file_activity_count'] = 4 + (i % 3)
+        f['unique_files'] = 4
         f['unique_extensions'] = 2  # The original extension + .lockbit
-        f['event_11_count'] = 200   # File creations (ransom notes + encrypted files)
-        f['event_23_count'] = 200   # File deletions (removing the original unencrypted files)
+        f['event_11_count'] = 2   # File creations (ransom notes + encrypted files)
+        f['event_23_count'] = 2   # File deletions (removing the original unencrypted files)
         trace.append(f)
         
     return trace
