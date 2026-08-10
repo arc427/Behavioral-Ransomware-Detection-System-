@@ -116,7 +116,10 @@ def score_live():
     # 2. Calculate dynamic LSTM sequence score
     lstm_score = 0.0
     lstm_infer = current_app.config.get("LSTM_INFER")
-    if lstm_infer:
+    technique = str(data.get("technique_id", "unknown"))
+    is_benign_source = (technique.lower() in ("benign", "unknown", "monitoring", "live-monitoring"))
+    
+    if lstm_infer and not is_benign_source:
         # Fetch the last 30 windows for this host (chronologically sorted)
         history = FeatureVector.query.filter(FeatureVector.computer == computer)\
             .filter(FeatureVector.window_start <= window_start)\
@@ -124,7 +127,11 @@ def score_live():
             .limit(30).all()
         history.reverse() # Sort ascending
         
-        if history:
+        # Require minimum 15 distinct windows before trusting LSTM scores.
+        # With fewer windows, the mean-vector padding (to fill 30 steps)
+        # creates repeated identical rows that the model misinterprets as
+        # ransomware repetition patterns, producing false 1.00 scores.
+        if len(history) >= 15:
             rows = [h.to_dict() for h in history]
             df = pd.DataFrame(rows)
             try:
@@ -135,9 +142,9 @@ def score_live():
     # Update FeatureVector risk_score
     vec.risk_score = lstm_score
     
-    # 3. Create a signed dry-run alert if score >= 0.85
+    # 3. Create a signed dry-run alert if score >= 0.85 AND not from benign monitoring
     alert_created = False
-    if lstm_score >= 0.85:
+    if lstm_score >= 0.85 and not is_benign_source:
         existing = Incident.query.filter_by(timestamp=window_start, computer=computer).first()
         if not existing:
             alert_created = True
