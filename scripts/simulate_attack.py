@@ -18,12 +18,12 @@ API_KEY = "dev-hmac-key"
 
 # Map source paths to friendly names for the CLI
 FAMILY_MAP = {
-    "atomic-t1059": "data\\datasets\\splunk_attack_data\\datasets\\attack_techniques\\T1059.001\\atomic_red_team\\windows-sysmon.log",
-    "atomic-t1105": "data\\datasets\\splunk_attack_data\\datasets\\attack_techniques\\T1105\\atomic_red_team\\windows-sysmon.log",
-    "atomic-t1490": "data\\datasets\\splunk_attack_data\\datasets\\attack_techniques\\T1490\\atomic_red_team\\windows-sysmon.log",
-    "ransomware-notes": "data\\datasets\\splunk_attack_data\\datasets\\attack_techniques\\T1490\\ransomware_notes\\windows-sysmon.log",
-    "dcrypt": "data\\datasets\\splunk_attack_data\\datasets\\attack_techniques\\T1486\\dcrypt\\windows-sysmon.log",
-    "samsam": "data\\datasets\\splunk_attack_data\\datasets\\attack_techniques\\T1486\\sam_sam_note\\windows-sysmon.log"
+    "atomic-t1059": str(ROOT / "data/datasets/splunk_attack_data/datasets/attack_techniques/T1059.001/atomic_red_team/windows-sysmon.log"),
+    "atomic-t1105": str(ROOT / "data/datasets/splunk_attack_data/datasets/attack_techniques/T1105/atomic_red_team/windows-sysmon.log"),
+    "atomic-t1490": str(ROOT / "data/datasets/splunk_attack_data/datasets/attack_techniques/T1490/atomic_red_team/windows-sysmon.log"),
+    "ransomware-notes": str(ROOT / "data/datasets/splunk_attack_data/datasets/attack_techniques/T1490/ransomware_notes/windows-sysmon.log"),
+    "dcrypt": str(ROOT / "data/datasets/splunk_attack_data/datasets/attack_techniques/T1486/dcrypt/windows-sysmon.log"),
+    "samsam": str(ROOT / "data/datasets/splunk_attack_data/datasets/attack_techniques/T1486/sam_sam_note/windows-sysmon.log")
 }
 
 def main():
