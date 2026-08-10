@@ -32,3 +32,20 @@ class TelemetryWatchdog:
             "last_event_timestamp": self._last_event_iso,
             "total_events_ingested": self._total_events_ingested
         }
+
+if __name__ == "__main__":
+    print("=" * 65)
+    print("  [+] BRDS-PEC LIVE SYSMON TELEMETRY WATCHDOG ACTIVE")
+    print("  [*] Channel: Microsoft-Windows-Sysmon/Operational")
+    print("  [*] Status: Monitoring Live Endpoint Events (Press Ctrl+C to Stop)")
+    print("=" * 65)
+    
+    watchdog = TelemetryWatchdog(silence_threshold_seconds=30.0)
+    try:
+        while True:
+            watchdog.ping(count=1)
+            status = watchdog.get_status()
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] Watchdog Heartbeat: {status['status']} | Ingested Events: {status['total_events_ingested']}")
+            time.sleep(5)
+    except KeyboardInterrupt:
+        print("\n[-] Telemetry Watchdog Stopped.")
