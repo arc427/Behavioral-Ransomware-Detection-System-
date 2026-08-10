@@ -51,6 +51,7 @@ def telemetry():
                 query = query.filter(field.ilike(f"%{_safe_like(value)}%", escape="\\"))
                 
         total = query.count()
+        query = query.order_by(FeatureVector.window_start.desc())
         limit, offset = _page_args()
         vectors = query.offset(offset).limit(limit).all()
         items = [v.to_dict() for v in vectors]
