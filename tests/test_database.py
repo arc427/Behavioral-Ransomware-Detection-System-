@@ -91,15 +91,17 @@ def test_database_insert_retrieve(app_client):
         assert incidents[0].to_dict()["id"] == "INC-1"
 
 def test_api_telemetry_db_query(app_client):
-    # Query /api/telemetry via REST API
+    # Query /api/telemetry via REST API (results are sorted newest-first)
     res = app_client.get('/api/telemetry?limit=5')
     assert res.status_code == 200
     data = json.loads(res.data)
     assert data["total"] == 2
     assert len(data["items"]) == 2
-    assert data["items"][0]["process_key"] == "svchost.exe:1010"
-    assert data["items"][0]["event_count"] == 5
-    assert data["items"][1]["file_activity_count"] == 85
+    # Newest first (wannacry window_start=04:00:05 > svchost window_start=04:00:00)
+    assert data["items"][0]["process_key"] == "wannacry.exe:2020"
+    assert data["items"][0]["file_activity_count"] == 85
+    assert data["items"][1]["process_key"] == "svchost.exe:1010"
+    assert data["items"][1]["event_count"] == 5
 
 def test_api_alerts_db_query(app_client):
     # Query /api/alerts via REST API

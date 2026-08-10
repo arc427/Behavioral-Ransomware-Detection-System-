@@ -68,11 +68,19 @@ class TelemetryWatchdog:
         data_bytes = json.dumps(window_record).encode("utf-8")
         req = urllib.request.Request(self.api_url, data=data_bytes, headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=3.0) as resp:
+            with urllib.request.urlopen(req, timeout=5.0) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 self.ping(count=1)
                 return result
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", errors="replace")
+            print(f"[ERROR] POST /api/score/live failed: HTTP {e.code} — {body[:200]}")
+            return None
+        except urllib.error.URLError as e:
+            print(f"[ERROR] POST /api/score/live failed: {e.reason} (Is backend running?)")
+            return None
         except Exception as e:
+            print(f"[ERROR] POST /api/score/live failed: {e}")
             return None
 
 

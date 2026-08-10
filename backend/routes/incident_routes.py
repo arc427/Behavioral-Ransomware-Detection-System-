@@ -31,16 +31,34 @@ def _alerts() -> list[dict]:
 def alerts():
     use_offline = (os.environ.get("BRDS_USE_OFFLINE_BENCHMARK") == "1")
     
+    db_available = False
+    total = 0
     try:
         query = Incident.query
         total = query.count()
         db_available = True
     except OperationalError:
-        db_available = False
-        total = 0
+        pass
     
-    if db_available and total > 0 and not use_offline:
-        # Query strictly from SQL database
+    if use_offline or (not db_available):
+        # OFFLINE MODE: Read from historical JSON alert file
+        items = _alerts()
+        for name in ("host", "technique", "scenario"):
+            value = request.args.get(name)
+            field = {"host": "computer", "technique": "technique_id", "scenario": "scenario"}[name]
+            if value:
+                items = [item for item in items if value.lower() in str(item.get(field, "")).lower()]
+        try:
+            minimum_risk = float(request.args.get("min_risk", 0))
+        except ValueError:
+            minimum_risk = 0
+        items = [item for item in items if float(item.get("risk_score", 0)) >= minimum_risk]
+        items.sort(key=lambda item: item.get("risk_score", 0), reverse=True)
+        limit, offset = _page_args()
+        total = len(items)
+        items = items[offset : offset + limit]
+    else:
+        # LIVE MODE: Query strictly from SQL database (returns [] when empty)
         for query_name, field in (("host", Incident.computer), 
                                    ("technique", Incident.ransomware_family)):
             value = request.args.get(query_name)
@@ -59,22 +77,5 @@ def alerts():
         limit, offset = _page_args()
         incidents = query.offset(offset).limit(limit).all()
         items = [inc.to_dict() for inc in incidents]
-    else:
-        # Fallback to JSON file reading only when explicitly requested
-        items = _alerts()
-        for name in ("host", "technique", "scenario"):
-            value = request.args.get(name)
-            field = {"host": "computer", "technique": "technique_id", "scenario": "scenario"}[name]
-            if value:
-                items = [item for item in items if value.lower() in str(item.get(field, "")).lower()]
-        try:
-            minimum_risk = float(request.args.get("min_risk", 0))
-        except ValueError:
-            minimum_risk = 0
-        items = [item for item in items if float(item.get("risk_score", 0)) >= minimum_risk]
-        items.sort(key=lambda item: item.get("risk_score", 0), reverse=True)
-        limit, offset = _page_args()
-        total = len(items)
-        items = items[offset : offset + limit]
         
     return jsonify({"items": items, "total": total, "limit": limit, "offset": offset, "mode": "dry_run"})

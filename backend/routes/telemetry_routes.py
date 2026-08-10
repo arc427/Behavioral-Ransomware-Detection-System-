@@ -33,16 +33,32 @@ def _safe_like(value: str) -> str:
 def telemetry():
     use_offline = (os.environ.get("BRDS_USE_OFFLINE_BENCHMARK") == "1")
     
+    db_available = False
+    total = 0
     try:
         query = FeatureVector.query
         total = query.count()
         db_available = True
     except OperationalError:
-        db_available = False
-        total = 0
+        pass
     
-    if db_available and total > 0 and not use_offline:
-        # Query strictly from SQL database
+    if use_offline or (not db_available):
+        # OFFLINE MODE: Read from historical CSV benchmark file
+        path = Path(current_app.config["TELEMETRY_PATH"])
+        if not path.exists():
+            limit, offset = _page_args()
+            return jsonify({"items": [], "total": 0, "limit": limit, "offset": offset})
+        frame = pd.read_csv(path)
+        for query_name, column in (("host", "computer"), ("technique", "technique_id"), ("source", "source")):
+            value = request.args.get(query_name)
+            if value and column in frame:
+                frame = frame[frame[column].astype(str).str.contains(value, case=False, na=False)]
+        limit, offset = _page_args()
+        total = len(frame)
+        page = frame.iloc[offset : offset + limit].where(pd.notna(frame), None)
+        items = page.to_dict(orient="records")
+    else:
+        # LIVE MODE: Query strictly from SQL database (returns [] when empty)
         for query_name, field in (("host", FeatureVector.computer), 
                                    ("technique", FeatureVector.technique_id), 
                                    ("source", FeatureVector.source)):
@@ -51,23 +67,10 @@ def telemetry():
                 query = query.filter(field.ilike(f"%{_safe_like(value)}%", escape="\\"))
                 
         total = query.count()
+        query = query.order_by(FeatureVector.window_start.desc())
         limit, offset = _page_args()
         vectors = query.offset(offset).limit(limit).all()
         items = [v.to_dict() for v in vectors]
-    else:
-        # Fallback to CSV file reading only when explicitly requested
-        path = Path(current_app.config["TELEMETRY_PATH"])
-        if not path.exists():
-            return jsonify({"items": [], "total": 0, "message": "No telemetry data available."})
-        frame = pd.read_csv(path)
-        for query_name, column in (("host", "computer"), ("technique", "technique_id"), ("source", "source")):
-            value = request.args.get(query_name)
-            if value and column in frame:
-                frame = frame[frame[column].astype(str).str.contains(value, case=False, na=False)]
-        limit, offset = _page_args()
-        page = frame.iloc[offset : offset + limit].where(pd.notna(frame), None)
-        items = page.to_dict(orient="records")
-        total = len(frame)
         
     return jsonify({"items": items, "total": total, "limit": limit, "offset": offset})
 
