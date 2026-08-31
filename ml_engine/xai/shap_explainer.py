@@ -75,6 +75,12 @@ class SHAPExplainer:
                     "importance_value": val
                 })
 
+        # Normalize importance values so they sum to 1.0 (relative proportion)
+        total_importance = sum(abs(x["importance_value"]) for x in attributions)
+        if total_importance > 0:
+            for attr in attributions:
+                attr["importance_value"] = abs(attr["importance_value"]) / total_importance
+
         # Sort by absolute importance value descending
         attributions.sort(key=lambda x: abs(x["importance_value"]), reverse=True)
         return attributions
@@ -168,14 +174,12 @@ class LSTMSHAPExplainer:
                 for name, val in zip(self.lstm_infer.feature_names, grad_x_input)
             ]
             
-        # Normalize importance values so they sum to 1.0 (relative percentage importance)
-        # This prevents "all zeros" in the UI when the sigmoid gradient vanishes due to high confidence (0.999+ scores)
+        # Normalize importance values so they sum to 1.0 (relative proportion)
+        # This ensures feature attributions are strictly bounded within [0.0, 1.0]
         total_importance = sum(abs(x["importance_value"]) for x in attributions)
         if total_importance > 0:
             for attr in attributions:
-                # Scale up to a readable range, e.g. relative percentage (0.0 to 1.0)
-                # We multiply by 10 so the raw values look like solid integers/decimals in the UI
-                attr["importance_value"] = (abs(attr["importance_value"]) / total_importance) * 10.0
+                attr["importance_value"] = abs(attr["importance_value"]) / total_importance
 
         attributions.sort(key=lambda x: abs(x["importance_value"]), reverse=True)
         return attributions
