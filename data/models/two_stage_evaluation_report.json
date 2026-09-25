@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "dataset": "sysmon_combined_windows.csv",
+    "test_windows_evaluated": 5258,
+    "attack_windows": 1736,
+    "benign_windows": 3522,
+    "threshold": 0.85,
+    "canonical_feature_count": 17
+  },
+  "experiment_1_isolation_forest_alone": {
+    "metrics": {
+      "precision": 0.041176470588235294,
+      "recall": 0.004032258064516129,
+      "f1": 0.007345225603357817,
+      "roc_auc": 0.8463716056021794,
+      "false_positive_rate": 0.04628052243043725,
+      "true_positives": 7,
+      "false_positives": 163,
+      "true_negatives": 3359,
+      "false_negatives": 1729,
+      "total_windows": 5258
+    },
+    "screening_efficiency": {
+      "normal_windows_screened": 5088,
+      "anomalous_windows_passed": 170,
+      "screening_rate": 0.9676683149486497
+    }
+  },
+  "experiment_2_lstm_alone": {
+    "metrics": {
+      "precision": 1.0,
+      "recall": 0.9994239631336406,
+      "f1": 0.9997118985883031,
+      "roc_auc": 0.9999558404446574,
+      "false_positive_rate": 0.0,
+      "true_positives": 1735,
+      "false_positives": 0,
+      "true_negatives": 3522,
+      "false_negatives": 1,
+      "total_windows": 5258
+    },
+    "threshold": 0.85,
+    "lstm_invocations": 5258
+  },
+  "experiment_3_two_stage_pipeline": {
+    "metrics": {
+      "precision": 1.0,
+      "recall": 0.004032258064516129,
+      "f1": 0.008032128514056224,
+      "roc_auc": 0.4789691753219396,
+      "false_positive_rate": 0.0,
+      "true_positives": 7,
+      "false_positives": 0,
+      "true_negatives": 3522,
+      "false_negatives": 1729,
+      "total_windows": 5258
+    },
+    "threshold": 0.85,
+    "total_windows": 5258,
+    "lstm_invocations": 170,
+    "lstm_skipped": 5088,
+    "invocation_reduction_pct": 96.76683149486497
+  },
+  "experiment_4_computational_efficiency": {
+    "sample_windows_benchmarked": 200,
+    "isolation_forest_alone": {
+      "latency_ms_per_window": 0.056,
+      "throughput_windows_per_sec": 17915.0
+    },
+    "lstm_alone": {
+      "latency_ms_per_window": 5.091,
+      "throughput_windows_per_sec": 196.4
+    },
+    "two_stage_pipeline": {
+      "latency_ms_per_window": 21.0,
+      "throughput_windows_per_sec": 47.6,
+      "speedup_factor_vs_lstm_alone": 0.24
+    }
+  },
+  "experiment_5_detection_lead_time": {
+    "lead_time_measurable": false,
+    "reason": "No ground-truth encryption start timestamps are annotated in the benchmark dataset. Detection lead time cannot be scientifically claimed without verified per-scenario key-exchange or file-rename start markers.",
+    "recommendation": "Deploy Sysmon with FileCreate/FileDelete monitoring on canary directories during live VM detonations to capture verifiable pre-encryption lead time deltas."
+  }
+}

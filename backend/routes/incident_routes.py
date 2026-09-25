@@ -1,4 +1,4 @@
-"""Read-only dry-run alert endpoints. No endpoint can trigger containment."""
+"""Read-only dry-run alert and pipeline decision audit endpoints."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def _alerts() -> list[dict]:
 @incident_bp.get("/api/incidents")
 def alerts():
     use_offline = (os.environ.get("BRDS_USE_OFFLINE_BENCHMARK") == "1")
-    
+
     db_available = False
     total = 0
     try:
@@ -39,7 +39,7 @@ def alerts():
         db_available = True
     except OperationalError:
         pass
-    
+
     if use_offline or (not db_available):
         # OFFLINE MODE: Read from historical JSON alert file
         items = _alerts()
@@ -58,24 +58,66 @@ def alerts():
         total = len(items)
         items = items[offset : offset + limit]
     else:
-        # LIVE MODE: Query strictly from SQL database (returns [] when empty)
-        for query_name, field in (("host", Incident.computer), 
-                                   ("technique", Incident.ransomware_family)):
+        # LIVE MODE: Query strictly from SQL database
+        for query_name, field in (
+            ("host", Incident.computer),
+            ("technique", Incident.ransomware_family),
+        ):
             value = request.args.get(query_name)
             if value:
                 query = query.filter(field.ilike(f"%{_safe_like(value)}%", escape="\\"))
-                
+
         try:
             minimum_risk = float(request.args.get("min_risk", 0.0))
             if minimum_risk > 0:
                 query = query.filter(Incident.risk_score >= minimum_risk)
         except ValueError:
             pass
-            
+
         total = query.count()
         query = query.order_by(Incident.risk_score.desc())
         limit, offset = _page_args()
         incidents = query.offset(offset).limit(limit).all()
         items = [inc.to_dict() for inc in incidents]
-        
+
     return jsonify({"items": items, "total": total, "limit": limit, "offset": offset, "mode": "dry_run"})
+
+
+@incident_bp.get("/api/pipeline_decisions")
+def pipeline_decisions():
+    """Return the per-window two-stage inference audit log.
+
+    Query parameters:
+      computer   — filter by host (substring match)
+      would_alert — '1' to return only alerting windows, '0' for non-alerting
+      lstm_invoked — '1' / '0'
+      limit, offset — pagination (max 1000)
+    """
+    from backend.models.pipeline_decisions import PipelineDecision
+
+    try:
+        query = PipelineDecision.query
+    except OperationalError:
+        return jsonify({"items": [], "total": 0, "error": "audit table unavailable"}), 503
+
+    computer_filter = request.args.get("computer")
+    if computer_filter:
+        query = query.filter(
+            PipelineDecision.computer.ilike(f"%{_safe_like(computer_filter)}%", escape="\\")
+        )
+
+    would_alert_filter = request.args.get("would_alert")
+    if would_alert_filter in ("1", "0"):
+        query = query.filter(PipelineDecision.would_alert == (would_alert_filter == "1"))
+
+    lstm_invoked_filter = request.args.get("lstm_invoked")
+    if lstm_invoked_filter in ("1", "0"):
+        query = query.filter(PipelineDecision.lstm_invoked == (lstm_invoked_filter == "1"))
+
+    total = query.count()
+    query = query.order_by(PipelineDecision.id.desc())
+    limit, offset = _page_args()
+    rows = query.offset(offset).limit(limit).all()
+    items = [row.to_dict() for row in rows]
+
+    return jsonify({"items": items, "total": total, "limit": limit, "offset": offset})

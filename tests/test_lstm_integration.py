@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import pytest
 import os
+import pandas as pd
 import joblib
 import torch
 import numpy as np
@@ -10,6 +11,36 @@ from backend.app import create_app
 from backend.models import db
 from backend.models.incidents import Incident
 from backend.models.feature_vectors import FeatureVector
+from scripts.train_baseline import train
+
+LSTM_FEATURE_NAMES = [
+    'event_count', 'unique_images', 'unique_files', 'unique_extensions',
+    'unique_destination_ips', 'suspicious_path_count', 'file_activity_count',
+    'registry_activity_count', 'network_activity_count', 'event_1_count',
+    'event_3_count', 'event_7_count', 'event_11_count', 'event_12_count',
+    'event_13_count', 'event_23_count', 'event_26_count'
+]
+
+
+def _write_tiny_baseline(path: Path) -> Path:
+    rows = []
+    for label, prefix, offset in ((0, "benign", 0), (1, "attack", 80)):
+        for source_index in range(3):
+            for row_index in range(4):
+                row = {
+                    "source": f"{prefix}-{source_index}",
+                    "label": label,
+                    "computer": "host",
+                    "process_key": f"p-{row_index}",
+                    "window_start": f"2026-01-01T00:00:{row_index:02d}Z",
+                }
+                for name in LSTM_FEATURE_NAMES:
+                    row[name] = offset + row_index
+                rows.append(row)
+    artifacts, _ = train(pd.DataFrame(rows))
+    joblib.dump(artifacts, path)
+    return path
+
 
 @pytest.fixture
 def app_client():
@@ -37,13 +68,7 @@ def app_client():
 
     checkpoint = {
         "model_state_dict": model.state_dict(),
-        "feature_names": [
-            'event_count', 'unique_images', 'unique_files', 'unique_extensions',
-            'unique_destination_ips', 'suspicious_path_count', 'file_activity_count',
-            'registry_activity_count', 'network_activity_count', 'event_1_count',
-            'event_3_count', 'event_7_count', 'event_11_count', 'event_12_count',
-            'event_13_count', 'event_23_count', 'event_26_count'
-        ],
+        "feature_names": LSTM_FEATURE_NAMES,
         "input_dim": 17,
         "hidden_dim": 8,
         "num_layers": 1,
@@ -61,12 +86,17 @@ def app_client():
     alerts_fd, alerts_path = tempfile.mkstemp(suffix=".json")
     os.close(alerts_fd)
     Path(alerts_path).write_text("[]", encoding="utf-8")
+
+    baseline_fd, baseline_path = tempfile.mkstemp(suffix=".joblib")
+    os.close(baseline_fd)
+    _write_tiny_baseline(Path(baseline_path))
     
     app = create_app({
         'SQLALCHEMY_DATABASE_URI': f"sqlite:///{db_path}",
         'TESTING': True,
         'DATABASE_PATH': Path(db_path),
         'LSTM_MODEL_PATH': Path(lstm_path),
+        'MODEL_PATH': Path(baseline_path),
         'ALERTS_PATH': Path(alerts_path)
     })
     
@@ -85,6 +115,7 @@ def app_client():
         os.remove(db_path)
         os.remove(lstm_path)
         os.remove(alerts_path)
+        os.remove(baseline_path)
     except OSError:
         pass
 
@@ -147,6 +178,10 @@ def test_lstm_live_scoring_low_risk(app_client):
     assert data["status"] == "success"
     assert data["risk_score"] < 0.85
     assert data["containment_triggered"] is False
+    assert "pipeline" in data
+    assert data["pipeline"]["isolation_forest_decision"] in ("normal", "anomalous")
+    if data["pipeline"]["isolation_forest_decision"] == "normal":
+        assert data["pipeline"]["lstm_invoked"] is False
 
 def test_lstm_live_scoring_high_risk(app_client):
     # Seed 29 steps in FeatureVector database to fill the sequence
@@ -192,11 +227,18 @@ def test_lstm_live_scoring_high_risk(app_client):
         "features": features
     }
     
+    pipeline = app_client.application.config.get("INFERENCE_PIPELINE")
+    assert pipeline is not None
+    pipeline.if_screening_threshold = -999.0
+    pipeline.isolation_forest.predict = lambda X: np.full(len(X), -1, dtype=int)
+
     # Send post request
     res = app_client.post('/api/score/live', json=payload)
     assert res.status_code == 200
     data = json.loads(res.data)
     assert data["status"] == "success"
+    assert data["pipeline"]["isolation_forest_decision"] == "anomalous"
+    assert data["pipeline"]["lstm_invoked"] is True
     
     # Query incidents to make sure it triggered a database alert
     with app_client.application.app_context():

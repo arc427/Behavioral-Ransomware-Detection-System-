@@ -60,10 +60,11 @@ class TelemetryWatchdog:
 
     def post_window_to_api(self, window_record: dict) -> dict | None:
         """Send a 5-second feature window vector to the Flask /api/score/live endpoint."""
+        api_key = os.environ.get("BRDS_API_KEY", "dev-key-123")
         headers = {
             "Content-Type": "application/json",
-            "X-BRDS-API-Key": "dev-key-123",
-            "X-API-Key": "dev-key-123"
+            "X-BRDS-API-Key": api_key,
+            "X-API-Key": api_key
         }
         data_bytes = json.dumps(window_record).encode("utf-8")
         req = urllib.request.Request(self.api_url, data=data_bytes, headers=headers, method="POST")
@@ -163,7 +164,8 @@ def fetch_live_system_process_windows() -> list[dict]:
                 "label": 0,
                 "technique_id": "benign",
                 "scenario": "live-monitoring",
-                "source": "live-endpoint",
+                "source": "live-endpoint-heuristic-fallback",
+                "source_kind": "process_polling_heuristic",
                 "features": features
             }
             windows.append(record)

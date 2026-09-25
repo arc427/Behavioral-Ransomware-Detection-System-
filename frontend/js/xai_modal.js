@@ -89,8 +89,32 @@ document.addEventListener("DOMContentLoaded", () => {
         { feature: 'system_executable (binary path verification)', value: -0.11, isPositive: false }
     ];
 
-    function renderSHAPBars(features) {
+    function renderSHAPBars(features, isModelDerived = true) {
         container.innerHTML = '';
+
+        // Provenance badge
+        const badge = document.createElement('div');
+        badge.style.padding = '0.45rem 0.8rem';
+        badge.style.borderRadius = '6px';
+        badge.style.marginBottom = '1rem';
+        badge.style.fontSize = '0.78rem';
+        badge.style.fontWeight = '600';
+        badge.style.display = 'flex';
+        badge.style.alignItems = 'center';
+        badge.style.gap = '0.5rem';
+
+        if (isModelDerived) {
+            badge.style.background = 'rgba(16, 185, 129, 0.15)';
+            badge.style.color = '#10b981';
+            badge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+            badge.innerHTML = '<span>✓</span> MODEL-DERIVED (PyTorch Autograd / SHAP Feature Attribution)';
+        } else {
+            badge.style.background = 'rgba(239, 68, 68, 0.15)';
+            badge.style.color = '#ef4444';
+            badge.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            badge.innerHTML = '<span>⚠</span> NOT MODEL-DERIVED (Heuristic Demonstration Fallback)';
+        }
+        container.appendChild(badge);
         
         features.forEach(feat => {
             const row = document.createElement('div');
@@ -136,7 +160,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         value: attr.importance_value,
                         isPositive: attr.importance_value >= 0
                     }));
-                    renderSHAPBars(formatted);
+                    const isModelDerived = Boolean(data.model_derived && !data.fallback);
+                    renderSHAPBars(formatted, isModelDerived);
                     return;
                 }
             }
@@ -147,6 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Simulation fallback based on ransomware family
         const familyName = (incident.ransomware_family || '').toLowerCase();
         const shapData = familySHAPData[familyName] || defaultSHAPData;
-        renderSHAPBars(shapData);
+        renderSHAPBars(shapData, false);
     };
 });

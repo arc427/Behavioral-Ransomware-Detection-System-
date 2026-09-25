@@ -61,12 +61,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // Find incident
         const idx = activeIncidents.findIndex(inc => inc.id === id);
         if (idx !== -1) {
-            activeIncidents[idx].status = isAuto ? 'CONTAINED (AUTO)' : 'CONTAINED';
+            const inc = activeIncidents[idx];
+            inc.status = isAuto ? 'CONTAINED (AUTO)' : 'CONTAINED';
             
             // Visual feedback
             const statusVal = document.getElementById(`status-${id}`);
             if (statusVal) {
-                statusVal.innerText = activeIncidents[idx].status;
+                statusVal.innerText = inc.status;
                 statusVal.style.color = 'var(--accent-mint)';
             }
             
@@ -78,15 +79,28 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             // Pulse status engine active
-            containmentDot.className = 'dot danger';
-            containmentStatusText.innerText = isAuto ? 'Host Isolated (Auto Containment)' : 'Host Isolated (Manual Containment)';
-            containmentStatusText.style.color = 'var(--accent-crimson)';
-            
-            setTimeout(() => {
-                containmentDot.className = 'dot pulse';
-                containmentStatusText.innerText = 'Containment Engine: Active';
-                containmentStatusText.style.color = 'var(--text-white)';
-            }, 5000);
+            if (containmentDot) containmentDot.className = 'dot danger';
+            if (containmentStatusText) {
+                containmentStatusText.innerText = isAuto ? 'Host Isolated (Auto Containment)' : 'Host Isolated (Manual Containment)';
+                containmentStatusText.style.color = 'var(--accent-crimson)';
+                
+                setTimeout(() => {
+                    containmentDot.className = 'dot pulse';
+                    containmentStatusText.innerText = 'Containment Engine: Active';
+                    containmentStatusText.style.color = 'var(--text-white)';
+                }, 5000);
+            }
+
+            // Sync manual containment action with backend database
+            fetch(`${API_BASE}/api/containment/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    window_start: inc.id,
+                    computer: inc.computer,
+                    status: 'CONTAINED'
+                })
+            }).catch(e => console.warn('Could not notify backend of manual containment:', e));
         }
     }
 
@@ -159,9 +173,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Trigger Containment UI for the most recent incident if it crossed threshold
                 const latestIncident = activeIncidents[0];
                 if (latestIncident && latestIncident.risk_score >= 0.85) {
-                    const containmentDot = document.getElementById('containment-dot');
-                    const containmentStatusText = document.getElementById('containment-status-text');
-                    
                     if (isAutoOn) {
                         // Only show toast if it's a new incident we haven't handled yet
                         if (!window.lastToastedIncidentId || window.lastToastedIncidentId !== latestIncident.id) {
@@ -170,29 +181,26 @@ document.addEventListener("DOMContentLoaded", () => {
                                 showToast(latestIncident);
                             }, 500);
                         }
-                        // Note: isolateHost DOM updates are no longer needed here because renderIncidents() 
-                        // correctly omits the button for status 'CONTAINED (AUTO)'
                         
                         if (containmentDot) containmentDot.className = 'dot danger';
                         if (containmentStatusText) {
                             containmentStatusText.innerText = 'Host Isolated (Auto Containment)';
                             containmentStatusText.style.color = 'var(--accent-crimson)';
                         }
-                    } else {
-                        if (containmentDot) containmentDot.className = 'dot danger';
-                        if (containmentStatusText) {
-                            containmentStatusText.innerText = 'Critical: Active Threat Detected (Containment Required)';
-                            containmentStatusText.style.color = 'var(--accent-crimson)';
-                        }
                     }
                 }
-                return;
             }
         } catch (e) {
-            // API offline - continue to simulation
+            // API offline - do not fabricate threats unless in explicit demo mode
+            if (containmentStatusText) {
+                containmentStatusText.innerText = 'Backend Offline';
+                containmentStatusText.style.color = 'var(--text-muted)';
+            }
         }
         
-        checkSimulatedThreats();
+        if (window.location.search.includes('demo=1')) {
+            checkSimulatedThreats();
+        }
     }
 
     function showToast(incident) {
@@ -227,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 6000);
     }
 
-    // Monitor the chart dataset to inject simulated threats when risk score spikes
+    // Monitor the chart dataset to inject simulated threats when in demo mode (?demo=1)
     const families = ['wannacry', 'lockbit', 'ryuk', 'sodinokibi', 'blackbasta'];
     function checkSimulatedThreats() {
         if (!window.riskChart) return;

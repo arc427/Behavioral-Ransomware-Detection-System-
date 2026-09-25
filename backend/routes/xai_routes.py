@@ -64,6 +64,7 @@ def explanation(alert_id: str):
             "alert_id": alert_id,
             "available": True,
             "explanation_source": explanation_source,
+            "model_derived": True,
             "attributions": attributions
         })
     except Exception as e:
@@ -80,6 +81,9 @@ def explanation(alert_id: str):
             "available": True,
             "attributions": mock_attributions,
             "fallback": True,
+            "model_derived": False,
+            "provenance": "heuristic_fallback_not_model_derived",
+            "warning": "NOT MODEL-DERIVED: Static heuristic fallback used because dynamic XAI computation failed.",
             "error": "Explanation computation failed. Contact your SOC administrator."
         })
 
@@ -173,6 +177,7 @@ def explanation_pdf(alert_id: str):
 
     # 3. Fetch explanation attributions
     attributions = []
+    is_model_derived = False
     try:
         exp_response = explanation(alert_id)
         if isinstance(exp_response, tuple):
@@ -180,6 +185,7 @@ def explanation_pdf(alert_id: str):
         else:
             data = exp_response.get_json()
         attributions = data.get("attributions", [])
+        is_model_derived = bool(data.get("model_derived", False))
     except Exception:
         pass
 
@@ -187,6 +193,7 @@ def explanation_pdf(alert_id: str):
     if not attributions:
         fam_key = family_name.lower().strip()
         attributions = FAMILY_SHAP_FALLBACKS.get(fam_key, DEFAULT_SHAP_FALLBACK)
+        is_model_derived = False
 
     # 4. Build PDF in memory
     buffer = io.BytesIO()
@@ -209,6 +216,8 @@ def explanation_pdf(alert_id: str):
     # Title Banner
     story.append(Paragraph("BRDS-PEC | Explainable AI (XAI) Report", title_style))
     story.append(Paragraph("SHAP Neural Feature Attribution & Threat Mitigation Analysis", subtitle_style))
+    if not is_model_derived:
+        story.append(Paragraph("<font color='#dc2626'><b>PROVENANCE: NOT MODEL-DERIVED (Heuristic Demonstration Fallback)</b></font>", body_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#0284c7"), spaceBefore=4, spaceAfter=12))
 
     # Incident Details Table

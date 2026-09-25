@@ -1,128 +1,294 @@
-import time
+"""BRDS-PEC Automated Containment Trigger Daemon.
+
+Polls the HMAC-signed alert file.  For each new alert with risk >= 0.85 it:
+  1. Checks the dual containment gate (see below).
+  2. Invokes kill_process_tree.ps1 and ContainHost.ps1 with the appropriate mode.
+  3. Writes a containment audit entry to containment_audit.jsonl.
+  4. Notifies the backend API to update the Incident status.
+
+Dual containment gate (BOTH must be true for live action):
+  a. BRDS_LIVE_CONTAINMENT=1 is set in the daemon's environment.
+  b. A valid HMAC-signed .arm_token file exists at the configured path.
+
+If either condition is missing the scripts run in dry-run mode (log only).
+"""
+
+from __future__ import annotations
+
 import json
-import subprocess
+import logging
 import os
+import subprocess
 import sys
+import time
 import argparse
+from datetime import datetime, timezone
 from pathlib import Path
 
-# Add project root to sys.path
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-DEFAULT_ALERTS_PATH = ROOT / "data/processed/dry_run_alerts.json"
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+logger = logging.getLogger("trigger_daemon")
+
+DEFAULT_ALERTS_PATH = ROOT / "data" / "processed" / "dry_run_alerts.json"
+DEFAULT_ARM_TOKEN_PATH = Path(__file__).parent / ".arm_token"
+DEFAULT_AUDIT_LOG_PATH = ROOT / "data" / "processed" / "containment_audit.jsonl"
 CONTAIN_HOST_SCRIPT = Path(__file__).parent / "ContainHost.ps1"
 KILL_PROCESS_SCRIPT = Path(__file__).parent / "kill_process_tree.ps1"
+ROLLBACK_HOST_SCRIPT = Path(__file__).parent / "RollbackHost.ps1"
 
-def run_powershell(script_path: Path, args: list[str]) -> str:
-    """Execute a PowerShell containment script and capture output."""
-    cmd = ["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", str(script_path)] + args
+ALERT_THRESHOLD = 0.85
+
+
+def _is_live_containment_allowed(arm_token_path: Path) -> bool:
+    """Return True only when BOTH containment conditions are satisfied:
+    1. BRDS_LIVE_CONTAINMENT=1 in the environment.
+    2. A valid HMAC-signed arm token file exists.
+    """
+    env_ok = os.environ.get("BRDS_LIVE_CONTAINMENT", "0") == "1"
+    if not env_ok:
+        return False
+    from containment.alert_integrity import verify_arm_token
+    return verify_arm_token(arm_token_path)
+
+
+class PowerShellResult(str):
+    """String subclass representing command output that also allows tuple unpacking: rc, out = ..."""
+    returncode: int
+
+    def __new__(cls, text: str, returncode: int = 0):
+        obj = super().__new__(cls, text)
+        obj.returncode = returncode
+        return obj
+
+    def __iter__(self):
+        return iter((self.returncode, str(self)))
+
+
+def run_powershell(script_path: Path, args: list[str], timeout: int = 30) -> PowerShellResult:
+    """Execute a PowerShell containment script; return PowerShellResult (unpacks to rc, output)."""
+    cmd = [
+        "powershell.exe",
+        "-ExecutionPolicy", "Bypass",
+        "-NonInteractive",
+        "-File", str(script_path),
+    ] + args
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return res.stdout
-    except subprocess.CalledProcessError as e:
-        return f"Error executing script: {e.stderr}\nOutput: {e.stdout}"
+        res = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout
+        )
+        output = res.stdout + (("\n" + res.stderr) if res.stderr.strip() else "")
+        return PowerShellResult(output.strip(), res.returncode)
+    except subprocess.TimeoutExpired:
+        return PowerShellResult(f"[ERROR] Script timed out after {timeout}s: {script_path}", -1)
+    except FileNotFoundError:
+        return PowerShellResult("[ERROR] powershell.exe not found — containment scripts cannot run", -1)
 
-from containment.alert_integrity import verify_and_load, verify_arm_token, create_arm_token
 
-DEFAULT_ARM_TOKEN_PATH = Path(__file__).parent / ".arm_token"
+def _write_audit(audit_path: Path, record: dict) -> None:
+    """Append one JSON line to the containment audit log."""
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    with audit_path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, separators=(",", ":")) + "\n")
 
-def poll_alerts(alerts_path: Path, arm_token_path: Path, processed_alerts: set[str]) -> None:
-    """Read the alerts file and execute containment actions for new high-risk alerts."""
+
+def _notify_backend(alert: dict, status: str, backend_url: str) -> None:
+    """POST containment result to the backend API to update incident status."""
+    try:
+        import urllib.request
+        payload = json.dumps({
+            "window_start": alert.get("window_start") or alert.get("timestamp"),
+            "computer": alert.get("computer"),
+            "status": status,
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"{backend_url}/api/containment/status",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            logger.info("Backend status update: HTTP %s", resp.status)
+    except Exception as exc:
+        logger.warning("Could not notify backend of containment status: %s", exc)
+
+
+def poll_alerts(
+    alerts_path: Path,
+    arm_token_path: Path,
+    arg3: set[str] | Path,
+    arg4: set[str] | Path | None = None,
+    backend_url: str = "http://127.0.0.1:5000",
+) -> None:
+    """Read the alerts file and act on new high-risk alerts.
+
+    Supports both signatures:
+      poll_alerts(alerts_path, arm_token_path, processed_alerts)
+      poll_alerts(alerts_path, arm_token_path, audit_log_path, processed_alerts, backend_url)
+    """
+    if isinstance(arg3, set):
+        processed_alerts = arg3
+        audit_log_path = Path(arg4) if arg4 is not None else DEFAULT_AUDIT_LOG_PATH
+    else:
+        audit_log_path = Path(arg3)
+        processed_alerts = arg4 if isinstance(arg4, set) else set()
     if not alerts_path.exists():
         return
-        
+
+    from containment.alert_integrity import verify_and_load
     try:
         alerts = verify_and_load(alerts_path)
-    except Exception as e:
-        print(f"[SECURITY ALERT] {e}")
+    except Exception as exc:
+        logger.error("Alert file verification failed: %s", exc)
         return
-        
-    is_armed = verify_arm_token(arm_token_path)
-    cmd_args = ["-Armed"] if is_armed else []
-    
+
+    live = _is_live_containment_allowed(arm_token_path)
+    ps_mode_args = ["-Armed"] if live else ["-DryRunOverride"]
+    mode_label = "LIVE" if live else "DRY-RUN"
+
     for alert in alerts:
-        # Construct a unique key for the alert to prevent duplicate containment triggers
         alert_id = alert.get("window_start") or alert.get("timestamp")
         if not alert_id or alert_id in processed_alerts:
             continue
-            
+
         risk_score = float(alert.get("risk_score", 0.0))
-        if risk_score >= 0.85:
-            print(f"\n[ALERT DETECTED] ID: {alert_id} | Risk: {risk_score:.2f}")
-            
-            # Extract target process ID from process_key metadata e.g. "wannacry.exe:4920"
-            proc_key = alert.get("process_key", "")
-            pid = None
-            if ":" in proc_key:
-                try:
-                    pid = int(proc_key.split(":")[-1])
-                except ValueError:
-                    pass
-            
-            # Execute malicious process termination
-            if pid:
-                print(f"[CONTAINMENT] Invoking process tree collapse script for PID: {pid} (Armed: {is_armed})...")
-                proc_output = run_powershell(KILL_PROCESS_SCRIPT, ["-ParentPid", str(pid)] + cmd_args)
-                print(proc_output.strip())
-            else:
-                print("[WARN] Alert has no valid process ID associated. Skipping process termination.")
-            
-            # Execute host isolation
-            print(f"[CONTAINMENT] Invoking host network isolation script (Armed: {is_armed})...")
-            net_output = run_powershell(CONTAIN_HOST_SCRIPT, cmd_args)
-            print(net_output.strip())
-            
+        if risk_score < ALERT_THRESHOLD:
+            processed_alerts.add(alert_id)
+            continue
+
+        computer = alert.get("computer", "unknown")
+        logger.warning(
+            "[%s] Alert: id=%s computer=%s risk=%.3f",
+            mode_label, alert_id, computer, risk_score,
+        )
+
+        audit: dict = {
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+            "alert_id": alert_id,
+            "computer": computer,
+            "risk_score": risk_score,
+            "mode": mode_label,
+            "actions": [],
+        }
+
+        # ── Process tree termination ──────────────────────────────────────────
+        proc_key = alert.get("process_key", "")
+        pid: int | None = None
+        if ":" in proc_key:
+            try:
+                pid = int(proc_key.split(":")[-1])
+            except ValueError:
+                pass
+
+        if pid:
+            logger.info("[%s] Kill process tree PID=%s", mode_label, pid)
+            rc, out = run_powershell(
+                KILL_PROCESS_SCRIPT,
+                ["-ParentPid", str(pid)] + ps_mode_args,
+            )
+            logger.info("kill_process_tree exit=%s\n%s", rc, out)
+            audit["actions"].append({
+                "action": "kill_process_tree",
+                "pid": pid,
+                "exit_code": rc,
+                "output": out,
+            })
+        else:
+            logger.warning("No valid PID in process_key=%r — skipping process termination", proc_key)
+            audit["actions"].append({"action": "kill_process_tree", "skipped": "no_valid_pid"})
+
+        # ── Network isolation ─────────────────────────────────────────────────
+        logger.info("[%s] Host network isolation", mode_label)
+        rc, out = run_powershell(CONTAIN_HOST_SCRIPT, ps_mode_args)
+        logger.info("ContainHost exit=%s\n%s", rc, out)
+        audit["actions"].append({
+            "action": "contain_host",
+            "exit_code": rc,
+            "output": out,
+        })
+
+        # ── Audit log + backend notification ─────────────────────────────────
+        _write_audit(audit_log_path, audit)
+        status = "CONTAINED" if live else "DRY_RUN_CONTAINED"
+        _notify_backend(alert, status, backend_url)
+
         processed_alerts.add(alert_id)
 
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="BRDS-PEC Automated Containment Daemon")
-    parser.add_argument("--alerts-path", type=Path, default=DEFAULT_ALERTS_PATH, help="Path to dry_run_alerts.json file")
-    parser.add_argument("--arm-token-path", type=Path, default=DEFAULT_ARM_TOKEN_PATH, help="Path to signed .arm_token file")
-    parser.add_argument("--armed", action="store_true", help="Arm daemon for live containment")
-    parser.add_argument("--interval", type=float, default=1.5, help="Polling interval in seconds")
-    parser.add_argument("--one-shot", action="store_true", help="Run once and exit (for verification/testing)")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--alerts-path", type=Path, default=DEFAULT_ALERTS_PATH)
+    parser.add_argument("--arm-token-path", type=Path, default=DEFAULT_ARM_TOKEN_PATH)
+    parser.add_argument("--audit-log", type=Path, default=DEFAULT_AUDIT_LOG_PATH)
+    parser.add_argument("--backend-url", default="http://127.0.0.1:5000")
+    parser.add_argument(
+        "--create-arm-token",
+        action="store_true",
+        help="Generate a signed arm token and exit (requires BRDS_ALERT_HMAC_KEY)",
+    )
+    parser.add_argument("--interval", type=float, default=1.5)
+    parser.add_argument("--one-shot", action="store_true", help="Poll once and exit")
     args = parser.parse_args()
 
-    # Automatically create .arm_token if --armed flag is passed or BRDS_DRY_RUN is set to "0"
-    if args.armed or os.environ.get("BRDS_DRY_RUN") == "0":
-        args.arm_token_path.write_text(create_arm_token(), encoding="utf-8")
-    
-    print("[BRDS-PEC] Containment Trigger Daemon initialized.")
-    print(f"Alert database location: {args.alerts_path}")
-    
-    # Establish baseline to ignore pre-existing alerts on startup
-    processed_alerts = set()
-    if args.alerts_path.exists():
-        try:
-            alerts = verify_and_load(args.alerts_path)
-            for alert in alerts:
-                alert_id = alert.get("window_start") or alert.get("timestamp")
-                if alert_id:
-                    processed_alerts.add(alert_id)
-        except Exception as e:
-            print(f"Error parsing baseline alerts: {e}")
-            
-    print(f"Ignored {len(processed_alerts)} historical alerts. Ready to intercept active threats.")
-    
-    is_armed = verify_arm_token(args.arm_token_path)
-    if not is_armed:
-        print("[SAFETY] Valid signed .arm_token not found. Mode: Dry-Run (Host network and processes will not be disrupted).")
-    else:
-        print("[WARNING] Valid HMAC signed .arm_token verified! Mode: ARMED (Host isolation active!).")
-        
-    if args.one_shot:
-        poll_alerts(args.alerts_path, args.arm_token_path, processed_alerts)
-        print("[BRDS-PEC] One-shot polling run finished.")
+    # ── Arm token generation ──────────────────────────────────────────────────
+    if args.create_arm_token:
+        from containment.alert_integrity import create_arm_token
+        token = create_arm_token()
+        args.arm_token_path.write_text(token, encoding="utf-8")
+        logger.info("Arm token written to %s", args.arm_token_path)
         return
-        
+
+    # ── Startup banner ────────────────────────────────────────────────────────
+    live = _is_live_containment_allowed(args.arm_token_path)
+    if live:
+        logger.warning(
+            "*** LAB ARMED MODE *** BRDS_LIVE_CONTAINMENT=1 + valid arm token. "
+            "Process termination and network isolation WILL execute."
+        )
+    else:
+        env_set = os.environ.get("BRDS_LIVE_CONTAINMENT", "0") == "1"
+        token_ok = Path(args.arm_token_path).exists()
+        reason = []
+        if not env_set:
+            reason.append("BRDS_LIVE_CONTAINMENT != 1")
+        if not token_ok:
+            reason.append("arm token missing")
+        logger.info("DRY-RUN mode (%s). No host actions will execute.", " + ".join(reason) or "flags not met")
+
+    # ── Seed processed set from existing alerts (ignore pre-startup alerts) ───
+    processed_alerts: set[str] = set()
+    if args.alerts_path.exists():
+        from containment.alert_integrity import verify_and_load
+        try:
+            for alert in verify_and_load(args.alerts_path):
+                aid = alert.get("window_start") or alert.get("timestamp")
+                if aid:
+                    processed_alerts.add(aid)
+        except Exception as exc:
+            logger.warning("Could not pre-seed processed alerts: %s", exc)
+
+    logger.info(
+        "Daemon ready. alerts=%s interval=%.1fs pre-existing=%d",
+        args.alerts_path, args.interval, len(processed_alerts),
+    )
+
+    if args.one_shot:
+        poll_alerts(args.alerts_path, args.arm_token_path, args.audit_log, processed_alerts, args.backend_url)
+        logger.info("One-shot run complete.")
+        return
+
     try:
         while True:
-            poll_alerts(args.alerts_path, args.arm_token_path, processed_alerts)
+            poll_alerts(args.alerts_path, args.arm_token_path, args.audit_log, processed_alerts, args.backend_url)
             time.sleep(args.interval)
     except KeyboardInterrupt:
-        print("\n[BRDS-PEC] Containment Trigger Daemon shut down.")
+        logger.info("Daemon shut down.")
+
 
 if __name__ == "__main__":
     main()

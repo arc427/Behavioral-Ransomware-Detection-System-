@@ -144,8 +144,12 @@ print("Scoring complete. Alerts written to dry_run_alerts.json.")
 
 # Copy the scored combined dataset with risk scores to data/processed/sysmon_windows.csv
 # This mimics the live telemetry database table
-from ml_engine.risk_engine import RiskEngine
-scored_df = RiskEngine(models_dir / "baseline_models.joblib").score(df_combined)
+from ml_engine.two_stage_pipeline import TwoStageInferencePipeline
+
+scored_df = TwoStageInferencePipeline(
+    models_dir / "baseline_models.joblib",
+    lstm_model_path=models_dir / "lstm_model.pth",
+).score_dataframe(df_combined)
 scored_df.to_csv(telemetry_output_path, index=False)
 print(f"Wrote scored telemetry dataset to {telemetry_output_path}")
 

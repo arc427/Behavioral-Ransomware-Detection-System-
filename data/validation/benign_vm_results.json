@@ -1,0 +1,56 @@
+{
+  "validation_type": "benign_vm_validation",
+  "timestamp": "2026-09-25T17:12:47.560426+00:00",
+  "environment": {
+    "computer": "DESKTOP-E7ONVIT",
+    "python_version": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+    "sysmon_available": false,
+    "telemetry_source": "process-polling-fallback",
+    "if_screening_threshold_env": "-0.188196"
+  },
+  "collection": {
+    "windows_requested": 30,
+    "windows_collected": 30,
+    "collection_errors": 0,
+    "error_messages": []
+  },
+  "if_score_distribution": {
+    "count": 30,
+    "min": -0.106062,
+    "max": -0.008978,
+    "mean": -0.073701,
+    "median": -0.106062,
+    "stdev": 0.046548,
+    "p05": -0.106062,
+    "p95": -0.008978
+  },
+  "screening_results": {
+    "total_windows": 30,
+    "windows_passed_to_lstm": 30,
+    "windows_screened_out": 0,
+    "lstm_invocation_rate_pct": 100.0
+  },
+  "lstm_results": {
+    "windows_scored": 30,
+    "min_score": 0.998032,
+    "max_score": 0.999426,
+    "mean_score": 0.999236
+  },
+  "alerts": {
+    "total_alerts": 10,
+    "false_alerts_on_benign": 10
+  },
+  "inference_errors": [],
+  "threshold_status": {
+    "value": "-0.188196",
+    "status": "provisional_vm_validation_candidate",
+    "note": "NOT a validated production threshold"
+  },
+  "historical_comparison": {
+    "note": "Compare if_score_distribution against historical benign range [-0.291173, +0.099285]",
+    "historical_benign_min": -0.291173,
+    "historical_benign_max": 0.099285,
+    "vm_min": -0.106062,
+    "vm_max": -0.008978
+  }
+}

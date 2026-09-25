@@ -114,13 +114,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
         } catch (e) {
-            // API offline - continue to simulation fallback
+            // API offline
+            if (rateBadge) rateBadge.innerText = 'OFFLINE';
+            if (window.location.search.includes('demo=1')) {
+                simulateLiveTelemetry();
+            } else {
+                const emptyNotice = logContainer.querySelector('.offline-notice');
+                if (!emptyNotice && logContainer.children.length === 0) {
+                    logContainer.innerHTML = '<div class="offline-notice" style="color: var(--text-dim); text-align: center; padding: 2rem; font-size: 0.85rem;">[BACKEND OFFLINE] Connect backend to stream live telemetry.</div>';
+                }
+            }
+            return;
         }
         
-        simulateLiveTelemetry();
+        if (window.location.search.includes('demo=1')) {
+            simulateLiveTelemetry();
+        }
     }
 
-    // Simulated Event Log Generator
+    // Simulated Event Log Generator (only active in explicit demo mode: ?demo=1)
     const mockProcesses = [
         'C:\\Windows\\System32\\svchost.exe',
         'C:\\Windows\\explorer.exe',
@@ -136,8 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
         totalProcessed++;
         totalEventsEl.innerText = totalProcessed;
         
-        // Update rate badge
-        rateBadge.innerText = `${(0.5 + Math.random() * 2.5).toFixed(1)} ev/s`;
+        // Update rate badge with DEMO label
+        rateBadge.innerText = `DEMO: ${(0.5 + Math.random() * 2.5).toFixed(1)} ev/s`;
         
         // Randomly pick a process
         const randomProc = mockProcesses[Math.floor(Math.random() * mockProcesses.length)];

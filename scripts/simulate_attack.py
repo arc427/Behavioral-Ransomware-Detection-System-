@@ -58,9 +58,11 @@ def main():
     print(f"[*] Beginning live simulation. Sending to {API_URL} every {args.delay} seconds...")
     print(f"[*] Open your dashboard at http://127.0.0.1:5000/ to watch the attack.\n")
 
+    api_key = os.environ.get("BRDS_API_KEY", "dev-key-123")
     headers = {
         "Content-Type": "application/json",
-        "X-API-Key": API_KEY
+        "X-BRDS-API-Key": api_key,
+        "X-API-Key": api_key,
     }
 
     feature_cols = [

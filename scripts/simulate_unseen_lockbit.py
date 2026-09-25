@@ -68,9 +68,12 @@ def main():
     print("[*] Generating synthetic zero-day trace for unseen family: LockBit")
     trace = generate_lockbit_trace()
     
+    import os
+    api_key = os.environ.get("BRDS_API_KEY", "dev-key-123")
     headers = {
         "Content-Type": "application/json",
-        "X-API-Key": API_KEY
+        "X-BRDS-API-Key": api_key,
+        "X-API-Key": api_key,
     }
 
     print(f"[*] Beginning live simulation. Sending to {API_URL} every 1 second...")
