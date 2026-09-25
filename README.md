@@ -14,7 +14,7 @@ The system features a **guarded automated containment engine** designed with mul
 
 - Creates HMAC-SHA256 signed alerts with cryptographic integrity verification
 - Logs intended host-isolation and process-tree termination actions (dry-run default) or executes guarded containment in approved lab VMs
-- Generates explainable AI (SHAP / PyTorch Autograd) attribution reports with explicit provenance tracking
+- Generates explainable AI (SHAP / PyTorch Autograd) attribution reports with explicit provenance tracking and signed contribution directions ($+/-$)
 - Stores the incident in a SQLite database for forensic analysis via the SOC dashboard
 
 > **Validation Status:** Guarded live containment capability is implemented with strict multi-gate safety checks, but remains pending end-to-end isolated-VM validation. Default operation is strictly dry-run.
@@ -40,14 +40,15 @@ Trained on **20,402 behavioral windows** (2,785 attack + 17,617 genuine Windows 
 
 ## Key Features
 
-- **Behavioral Detection** — monitors Sysmon event sequences, not file hashes
-- **Two-Stage ML Pipeline** — Isolation Forest screening → LSTM sequence classification
+- **Behavioral Detection** — monitors Sysmon event sequences across 17 behavioral features, not static file hashes
+- **Two-Stage ML Pipeline** — Isolation Forest anomaly screening (candidate threshold `-0.188196`) $\to$ BiLSTM sequence classification
 - **Real Baseline Data** — 17,617 genuine Windows 11 benign windows from SILRAD-1.0
-- **Cryptographic Alert Integrity** — HMAC-SHA256 signed alert containers and arm tokens
-- **Explainable AI (XAI)** — PyTorch Autograd gradient attributions explain every alert with explicit provenance tracking
-- **SOC Dashboard** — dark-mode real-time monitoring with Chart.js risk timeline
+- **Cryptographic Alert Integrity** — HMAC-SHA256 signed alert containers (`verify_and_load`) and signed arm tokens
+- **Fail-Closed API Security** — constant-time API key verification (`BRDS_API_KEY`) rejects unauthenticated ingestion and status requests
+- **Explainable AI (XAI)** — PyTorch Autograd gradient attributions explain every alert with explicit provenance tracking (`model_derived: true`) and preserved positive/negative impact directions
+- **SOC Dashboard** — dark-mode real-time monitoring with Chart.js risk timeline and PDF forensic export
 - **Multi-Gate Containment** — host isolation and process tree collapse (dry-run default, guarded lab execution)
-- **Comprehensive Automated Test Suite** — covering backend auth, ML pipeline, containment gates, HMAC verification, XAI provenance, and SILRAD adapter
+- **88 Automated Tests** — 100% passing test suite covering backend auth, ML pipeline, containment gates, HMAC verification, XAI provenance, and SILRAD adapter
 
 ---
 
@@ -56,22 +57,22 @@ Trained on **20,402 behavioral windows** (2,785 attack + 17,617 genuine Windows 
 ```
 Windows Sysmon (v15+) Event Logging (Event IDs 1, 3, 7, 11, 12, 13, 23, 26)
   ↓
-Pipeline Parse & Temporal Aggregation (5-second Sliding Windows)
+Pipeline Parse & Temporal Aggregation (5-second Sliding Windows, 17 Features)
   ↓
-Isolation Forest (Tier 1 — Anomaly Screening)
-  ↓
-Deep LSTM Sequence Classifier (Tier 2 — 2-layer Bidirectional LSTM)
+Isolation Forest (Tier 1 — Continuous Anomaly Screening)
+  ↓ (score >= BRDS_IF_SCREENING_THRESHOLD)
+Deep LSTM Sequence Classifier (Tier 2 — 2-layer Bidirectional LSTM, 30 Timesteps)
   ↓
 Risk Score ∈ [0.0, 1.0]
   ↓
-≥ 0.85 → HMAC-SHA256 Signed Alert → Multi-Gate Containment Execution (Dry-run default)
+≥ 0.85 → HMAC-SHA256 Signed Alert Container → Multi-Gate Containment (Dry-run default)
   ↓
 SOC Dashboard & XAI Attribution Modal (Model-derived vs fallback provenance)
 ```
 
 ---
 
-## Detection Pipeline
+## Detection & Safety Pipeline
 
 ### Phase 1 — Telemetry Collection
 
@@ -98,15 +99,18 @@ Events are aggregated into 5-second sliding windows per process, producing 17 nu
 
 **Tier 2 — LSTM Classifier:** A 2-layer Bidirectional LSTM with hidden dimension 64, concatenated Mean + Max pooling across 30 timesteps, and sigmoid output. Loaded with `torch.load(..., weights_only=True)` and verified against a SHA-256 hash manifest.
 
-### Phase 4 — Guarded Containment
+### Phase 4 — Multi-Gate Containment & Rollback
 
-When risk ≥ 0.85, the containment engine evaluates the multi-gate authorization:
-- Network adapter isolation (`ContainHost.ps1`)
-- Process tree termination (`kill_process_tree.ps1`)
-- SHAP attribution report generation
-- Incident database entry via authenticated API
+When risk $\ge 0.85$, the containment engine evaluates the multi-gate authorization:
 
-> ⚠️ Guarded live containment requires `BRDS_LAB_ENVIRONMENT_APPROVED=1`, `BRDS_LIVE_CONTAINMENT=1`, and a valid HMAC arm token. Otherwise, actions run in dry-run mode (logged without host disruption). Live containment capability remains pending end-to-end isolated-VM validation.
+$$\text{BRDS\_LAB\_ENVIRONMENT\_APPROVED=1} \land \text{BRDS\_LIVE\_CONTAINMENT=1} \land \text{Valid HMAC .arm\_token} \implies \text{Armed Execution}$$
+
+- **Dry-Run Mode (Default):** Passes `-DryRunOverride` to PowerShell containment scripts. Logs planned actions to `data/processed/containment_audit.jsonl` without host disruption.
+- **Lab Armed Mode (Isolated Sandbox VM Only):**
+  - Process tree termination (`kill_process_tree.ps1 -Armed`): Collapses the malicious PID process tree while protecting critical Windows system processes (`lsass`, `csrss`, `explorer`, `svchost`, etc.).
+  - Network isolation (`ContainHost.ps1 -Armed`): Disables active network adapters via `Disable-NetAdapter`.
+  - Authenticated Status Sync: Notifies backend via `POST /api/containment/status` (`X-BRDS-API-Key`).
+- **Network Rollback:** [`containment/RollbackHost.ps1`](containment/RollbackHost.ps1) is available to restore network adapters after detonation testing.
 
 ---
 
@@ -117,95 +121,75 @@ When risk ≥ 0.85, the containment engine evaluates the multi-gate authorizatio
 | **Core Runtime** | Python 3.14, PowerShell 5.1/7+ |
 | **Deep Learning** | PyTorch ≥ 2.0.0 (LSTM Classifier) |
 | **Machine Learning** | Scikit-Learn (Isolation Forest, Logistic Regression) |
-| **Explainable AI** | SHAP, PyTorch Autograd Gradients |
+| **Explainable AI** | SHAP, PyTorch Autograd Gradients, ReportLab PDF Engine |
 | **Data Processing** | Pandas, NumPy, python-evtx |
 | **Backend** | Flask, Flask-SQLAlchemy, Flask-CORS |
 | **Database** | SQLite (`brds.db`) |
 | **Frontend** | HTML5, CSS3, JavaScript (ES6), Chart.js |
-| **Security** | HMAC-SHA256, SHA-256 model integrity, constant-time auth |
-| **Testing** | PyTest (29 tests) |
+| **Security** | HMAC-SHA256, SHA-256 model integrity, constant-time auth (`hmac.compare_digest`) |
+| **Testing** | PyTest (88 automated tests, 100% passing) |
 
 ---
 
-## Project Structure
+## Datasets & Methodology
 
-```
-brds-pec/
-├── pipeline/           # Sysmon parsing, filtering, temporal aggregation, SILRAD adapter
-├── ml_engine/          # LSTM model, risk engine, SHAP explainer
-├── containment/        # PowerShell scripts, alert integrity, trigger daemon
-├── backend/            # Flask REST API, SQLAlchemy models, auth middleware
-├── frontend/           # SOC dashboard (HTML/CSS/JS + Chart.js)
-├── data/
-│   ├── datasets/       # Raw datasets (Splunk, SILRAD, CSU, MLRAN, etc.)
-│   ├── models/         # Trained model checkpoints and evaluation reports
-│   └── processed/      # Feature-engineered CSVs and signed alert containers
-├── scripts/            # Pipeline execution, model training, data preparation
-├── docs/               # 22 documentation files (architecture, evaluation, etc.)
-├── sysmon_config/      # Sysmon XML configuration
-├── sandbox/            # VM detonation setup guide
-└── tests/              # 29 automated tests
-```
+The ML pipeline is trained and evaluated strictly on timestamped Sysmon event logs:
 
----
-
-## Datasets
-
-| Dataset | Role | Records |
+| Dataset | Role in Pipeline | Description / Split Allocation |
 |:---|:---|:---|
-| **SILRAD-1.0** | Genuine Windows 11 benign baseline + 6 ransomware families | 196,840 events |
-| **Splunk ATT&CK Data** | Ransomware attack execution traces (WannaCry, LockBit, Ryuk, Sodinokibi) | 2,785 windows |
-| **CSU Ransomware** | Supplementary goodware telemetry | 271,993 rows |
-| **MLRAN** | Supplementary goodware metadata | 2,550 rows |
-| **RansomSet** | Supplementary benign system calls | 2,103 rows |
+| **Splunk Attack Data** (6 files) | Attack telemetry (2,785 windows) | Sysmon logs covering MITRE techniques T1059.001 (PowerShell execution $\to$ Test), T1105 (Ingress Tool Transfer $\to$ Train), T1486 (Dcrypt / SamSam $\to$ Train/Val), T1490 (Shadow copy wipe / notes $\to$ Train). |
+| **SILRAD-1.0** (`fasttext-all-nofamily.csv`) | Benign baseline (17,617 windows) | Genuine Windows 11 telemetry adapted via `SILRADAdapter` across Train (10,569), Validation (3,526), and Test (3,522). |
+
+### Dataset Accounting & Exclusions
+
+Auxiliary datasets present in `data/datasets/` were intentionally excluded from model training based on technical schema incompatibility:
+- **RansomSet** (19 files): Windows Native API call sequence traces (`NtClose;NtOpenKey;...`), incompatible with the 17-feature Sysmon sliding-window schema.
+- **CSU Ransomware** (12 files): Pre-aggregated static summary tables without temporal event logs or process identifiers.
+- **MLRAN** (88 files): Cuckoo sandbox execution metadata, PE hashes, and static AVClass labels rather than streaming Sysmon logs.
 
 ---
 
-## Installation
+## Installation & Setup
 
-Clone the repository:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/arc427/Behavioral-Ransomware-Detection-System-.git
+   cd Behavioral-Ransomware-Detection-System-
+   ```
 
-```bash
-git clone https://github.com/arc427/Behavioral-Ransomware-Detection-System-.git
-cd Behavioral-Ransomware-Detection-System-
-```
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Install dependencies:
+3. **Configure environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   Set your local API key and HMAC secret:
+   ```powershell
+   $env:BRDS_API_KEY = "your-local-api-key"
+   $env:BRDS_ALERT_HMAC_KEY = "your-local-hmac-secret-key"
+   ```
 
-```bash
-pip install -r requirements.txt
-```
+4. **Initialize database and seed baseline data:**
+   ```bash
+   python scripts/run_pipeline.py
+   python scripts/prepare_live_data.py
+   ```
 
-Configure environment variables (copy and edit):
+5. **Start the backend REST API:**
+   ```bash
+   python backend/app.py
+   ```
 
-```bash
-cp .env.example .env
-```
+6. **Open the SOC dashboard:**
+   Open `frontend/index.html` in any web browser.
 
-Run the data preparation and model training pipeline:
-
-```bash
-python scripts/run_pipeline.py
-python scripts/prepare_live_data.py
-```
-
-Start the backend API:
-
-```bash
-python backend/app.py
-```
-
-Open the SOC dashboard:
-
-```
-frontend/index.html
-```
-
-Run automated tests:
-
-```bash
-python -m pytest
-```
+7. **Run automated test suite:**
+   ```bash
+   python -m pytest tests/ -v
+   ```
 
 ---
 
@@ -217,7 +201,7 @@ python -m pytest
 | **Python** | 3.14+ |
 | **RAM** | 8 GB minimum (16 GB recommended) |
 | **GPU** | Optional (NVIDIA CUDA for faster LSTM training) |
-| **Sysmon** | v15+ (for live telemetry collection) |
+| **Sysmon** | v15+ (with `sysmon_config/sysmon_config.xml` for live telemetry ingestion) |
 
 ---
 
@@ -231,25 +215,16 @@ Full project documentation is available in [`docs/`](docs/):
 - [Data Folder Report](docs/data_folder_report.md)
 - [Tech Stack Report](docs/tech_stack_report.md)
 - [Evaluation Report](docs/evaluation_report.md)
-- [Security Audit Report](docs/security_audit_report.md)
+- [Security Hardening Report](docs/security_hardening_report.md)
 - [Known Limitations](docs/known_limitations.md)
+- [Two-Stage Architecture & Limitations](docs/two_stage_architecture_and_limitations.md)
 - [Presentation Slides](docs/presentation.md)
 
 ---
 
-## Future Enhancements
-
-1. **Family-Held-Out Evaluation** — validate detection on ransomware families unseen during training
-2. **Encryption Start Timestamps** — enable detection lead-time measurement
-3. **Central SIEM Integration** — connect to Splunk, Microsoft Sentinel, or Elastic Security
-4. **Kernel Driver Containment** — move from PowerShell to kernel space for sub-millisecond response
-5. **Adaptive Online Retraining** — continuous learning from enterprise baseline drift
-6. **Multi-Host Orchestration** — distributed endpoint management and federated learning
-
----
-
-## License
+## License & Safety Notice
 
 This project is intended for educational and research purposes.
 
-Please ensure all ransomware testing is conducted inside isolated virtual environments.
+> ⚠️ Always ensure all malware testing is conducted inside isolated, non-production virtual machine sandboxes with host-only networking and snapshot recovery enabled.
+
