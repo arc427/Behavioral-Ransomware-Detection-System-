@@ -46,12 +46,14 @@ ALERT_THRESHOLD = 0.85
 
 
 def _is_live_containment_allowed(arm_token_path: Path) -> bool:
-    """Return True only when BOTH containment conditions are satisfied:
-    1. BRDS_LIVE_CONTAINMENT=1 in the environment.
-    2. A valid HMAC-signed arm token file exists.
+    """Return True only when ALL containment conditions are satisfied:
+    1. BRDS_LAB_ENVIRONMENT_APPROVED=1 in the environment (Lab safety).
+    2. BRDS_LIVE_CONTAINMENT=1 in the environment.
+    3. A valid HMAC-signed arm token file exists.
     """
-    env_ok = os.environ.get("BRDS_LIVE_CONTAINMENT", "0") == "1"
-    if not env_ok:
+    if os.environ.get("BRDS_LAB_ENVIRONMENT_APPROVED", "0") != "1":
+        return False
+    if os.environ.get("BRDS_LIVE_CONTAINMENT", "0") != "1":
         return False
     from containment.alert_integrity import verify_arm_token
     return verify_arm_token(arm_token_path)
@@ -99,6 +101,10 @@ def _write_audit(audit_path: Path, record: dict) -> None:
 
 def _notify_backend(alert: dict, status: str, backend_url: str) -> None:
     """POST containment result to the backend API to update incident status."""
+    api_key = os.environ.get("BRDS_API_KEY")
+    if not api_key:
+        logger.warning("Could not notify backend of containment status: BRDS_API_KEY is not set.")
+        return
     try:
         import urllib.request
         payload = json.dumps({
@@ -109,7 +115,10 @@ def _notify_backend(alert: dict, status: str, backend_url: str) -> None:
         req = urllib.request.Request(
             f"{backend_url}/api/containment/status",
             data=payload,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "X-BRDS-API-Key": api_key,
+            },
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=5) as resp:
@@ -243,17 +252,24 @@ def main() -> None:
         logger.info("Arm token written to %s", args.arm_token_path)
         return
 
+    if not os.environ.get("BRDS_API_KEY"):
+        logger.error("BRDS_API_KEY environment variable is missing. The daemon cannot communicate with the API.")
+        sys.exit(1)
+
     # ── Startup banner ────────────────────────────────────────────────────────
     live = _is_live_containment_allowed(args.arm_token_path)
     if live:
         logger.warning(
-            "*** LAB ARMED MODE *** BRDS_LIVE_CONTAINMENT=1 + valid arm token. "
+            "*** LAB ARMED MODE *** BRDS_LAB_ENVIRONMENT_APPROVED=1 + BRDS_LIVE_CONTAINMENT=1 + valid arm token. "
             "Process termination and network isolation WILL execute."
         )
     else:
+        lab_ok = os.environ.get("BRDS_LAB_ENVIRONMENT_APPROVED", "0") == "1"
         env_set = os.environ.get("BRDS_LIVE_CONTAINMENT", "0") == "1"
         token_ok = Path(args.arm_token_path).exists()
         reason = []
+        if not lab_ok:
+            reason.append("BRDS_LAB_ENVIRONMENT_APPROVED != 1")
         if not env_set:
             reason.append("BRDS_LIVE_CONTAINMENT != 1")
         if not token_ok:

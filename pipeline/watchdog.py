@@ -60,7 +60,10 @@ class TelemetryWatchdog:
 
     def post_window_to_api(self, window_record: dict) -> dict | None:
         """Send a 5-second feature window vector to the Flask /api/score/live endpoint."""
-        api_key = os.environ.get("BRDS_API_KEY", "dev-key-123")
+        api_key = os.environ.get("BRDS_API_KEY")
+        if not api_key:
+            print("[ERROR] BRDS_API_KEY environment variable is not set. Cannot post telemetry.")
+            return None
         headers = {
             "Content-Type": "application/json",
             "X-BRDS-API-Key": api_key,

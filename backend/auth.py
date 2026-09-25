@@ -13,9 +13,12 @@ def require_api_key(f):
     def decorated(*args, **kwargs):
         expected_key = _get_api_key()
         
-        # If no key is configured in env or config, pass through (e.g. dev/testing mode)
+        # If no key is configured, fail CLOSED. Do not invent a default.
         if not expected_key:
-            return f(*args, **kwargs)
+            return jsonify({
+                "error": "Unauthorized",
+                "message": "Authentication is strictly required, but no API key is configured in the environment."
+            }), 401
             
         provided_key = request.headers.get("X-BRDS-API-Key", "")
         

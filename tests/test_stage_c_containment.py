@@ -81,6 +81,7 @@ def _insecure_hmac(monkeypatch):
 
 def test_c1_no_live_containment_env_means_dry_run(tmp_path, monkeypatch):
     """Without BRDS_LIVE_CONTAINMENT=1, dual gate must return False."""
+    monkeypatch.setenv("BRDS_LAB_ENVIRONMENT_APPROVED", "1")
     monkeypatch.delenv("BRDS_LIVE_CONTAINMENT", raising=False)
     arm = tmp_path / ".arm_token"
     _make_arm_token(arm)
@@ -91,6 +92,7 @@ def test_c1_no_live_containment_env_means_dry_run(tmp_path, monkeypatch):
 
 def test_c2_no_arm_token_means_dry_run(tmp_path, monkeypatch):
     """Without a valid arm token, dual gate must return False even with env set."""
+    monkeypatch.setenv("BRDS_LAB_ENVIRONMENT_APPROVED", "1")
     monkeypatch.setenv("BRDS_LIVE_CONTAINMENT", "1")
     missing_token = tmp_path / ".arm_token"  # does not exist
 
@@ -98,8 +100,20 @@ def test_c2_no_arm_token_means_dry_run(tmp_path, monkeypatch):
     assert _is_live_containment_allowed(missing_token) is False
 
 
+def test_c2b_no_lab_environment_means_dry_run(tmp_path, monkeypatch):
+    """Without BRDS_LAB_ENVIRONMENT_APPROVED=1, dual gate must return False."""
+    monkeypatch.delenv("BRDS_LAB_ENVIRONMENT_APPROVED", raising=False)
+    monkeypatch.setenv("BRDS_LIVE_CONTAINMENT", "1")
+    arm = tmp_path / ".arm_token"
+    _make_arm_token(arm)
+
+    from containment.trigger_daemon import _is_live_containment_allowed
+    assert _is_live_containment_allowed(arm) is False
+
+
 def test_c3_both_conditions_met_means_armed(tmp_path, monkeypatch):
-    """When BRDS_LIVE_CONTAINMENT=1 AND valid arm token, gate returns True."""
+    """When ALL conditions met (LAB + LIVE + TOKEN), gate returns True."""
+    monkeypatch.setenv("BRDS_LAB_ENVIRONMENT_APPROVED", "1")
     monkeypatch.setenv("BRDS_LIVE_CONTAINMENT", "1")
     arm = tmp_path / ".arm_token"
     _make_arm_token(arm)
@@ -135,6 +149,7 @@ def test_c4_daemon_passes_dry_run_override_when_not_armed(tmp_path, monkeypatch)
 
 def test_c5_daemon_passes_armed_flag_when_gate_open(tmp_path, monkeypatch):
     """In live mode the daemon must pass -Armed (not -DryRunOverride) to PS1."""
+    monkeypatch.setenv("BRDS_LAB_ENVIRONMENT_APPROVED", "1")
     monkeypatch.setenv("BRDS_LIVE_CONTAINMENT", "1")
     alerts_path = _make_signed_alert(tmp_path)
     arm = tmp_path / ".arm_token"

@@ -143,7 +143,7 @@ def test_api_key_authentication(app_client):
     assert res_valid.status_code == 200
     
     # Clean up config key
-    app_client.application.config["BRDS_API_KEY"] = None
+    # (Kept API key in config so subsequent tests don't fail closed)
 
 def test_lstm_live_scoring_low_risk(app_client):
     # Ingest benign telemetry window (all zero features)
@@ -172,7 +172,7 @@ def test_lstm_live_scoring_low_risk(app_client):
         "features": features
     }
     
-    res = app_client.post('/api/score/live', json=payload)
+    res = app_client.post('/api/score/live', json=payload, headers={"X-BRDS-API-Key": "secret-test-key-12345"})
     assert res.status_code == 200
     data = json.loads(res.data)
     assert data["status"] == "success"
@@ -233,7 +233,7 @@ def test_lstm_live_scoring_high_risk(app_client):
     pipeline.isolation_forest.predict = lambda X: np.full(len(X), -1, dtype=int)
 
     # Send post request
-    res = app_client.post('/api/score/live', json=payload)
+    res = app_client.post('/api/score/live', json=payload, headers={"X-BRDS-API-Key": "secret-test-key-12345"})
     assert res.status_code == 200
     data = json.loads(res.data)
     assert data["status"] == "success"

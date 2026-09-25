@@ -11,7 +11,6 @@ import requests
 from datetime import datetime, timezone
 
 API_URL = "http://127.0.0.1:5000/api/score/live"
-API_KEY = "dev-hmac-key"
 
 def generate_lockbit_trace():
     """Generates 30 synthetic windows (2.5 minutes of telemetry) mimicking LockBit."""
@@ -69,7 +68,12 @@ def main():
     trace = generate_lockbit_trace()
     
     import os
-    api_key = os.environ.get("BRDS_API_KEY", "dev-key-123")
+    api_key = os.environ.get("BRDS_API_KEY")
+    if not api_key:
+        print("[!] ERROR: BRDS_API_KEY environment variable is missing.")
+        print("    Authentication is required. Run:")
+        print("    $env:BRDS_API_KEY=\"<your-key>\"; python scripts/simulate_unseen_lockbit.py")
+        sys.exit(1)
     headers = {
         "Content-Type": "application/json",
         "X-BRDS-API-Key": api_key,

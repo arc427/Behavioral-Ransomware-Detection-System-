@@ -66,3 +66,41 @@ def test_cors_origin_restrictions(tmp_path):
     # Unauthorized origin -> Access-Control-Allow-Origin is omitted/blocked
     res_disallowed = client.get("/api/health", headers={"Origin": "http://malicious-attacker.com"})
     assert res_disallowed.headers.get("Access-Control-Allow-Origin") is None
+
+
+def test_auth_missing_key_fails_closed(tmp_path, monkeypatch):
+    """Missing BRDS_API_KEY environment variable MUST fail closed with 401."""
+    monkeypatch.delenv("BRDS_API_KEY", raising=False)
+    app = create_app({"TESTING": True, "BRDS_API_KEY": None})
+    client = app.test_client()
+    
+    # Missing API key in environment + no header
+    res = client.post("/api/containment/status", json={"window_start": "ts", "computer": "host", "status": "CONTAINED"})
+    assert res.status_code == 401
+    assert "no API key is configured" in res.get_json()["message"]
+
+
+def test_auth_wrong_key_fails(tmp_path, monkeypatch):
+    """Wrong API key header must fail with 401."""
+    monkeypatch.setenv("BRDS_API_KEY", "correct-key")
+    app = create_app({"TESTING": True})
+    client = app.test_client()
+    
+    res = client.post("/api/containment/status", 
+                      headers={"X-BRDS-API-Key": "wrong-key"},
+                      json={"window_start": "ts", "computer": "host", "status": "CONTAINED"})
+    assert res.status_code == 401
+    assert "Invalid or missing" in res.get_json()["message"]
+
+
+def test_auth_correct_key_authorized(tmp_path, monkeypatch):
+    """Correct API key allows access to containment status."""
+    monkeypatch.setenv("BRDS_API_KEY", "correct-key")
+    app = create_app({"TESTING": True})
+    client = app.test_client()
+    
+    res = client.post("/api/containment/status", 
+                      headers={"X-BRDS-API-Key": "correct-key"},
+                      json={"window_start": "ts", "computer": "host", "status": "CONTAINED"})
+    # It might return 404 because DB is empty or 503, but not 401
+    assert res.status_code != 401

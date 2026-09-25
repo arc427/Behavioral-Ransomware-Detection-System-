@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "processed" / "sysmon_attack_windows.csv"
 API_URL = "http://127.0.0.1:5000/api/score/live"
-API_KEY = "dev-hmac-key"
 
 # Map source paths to friendly names for the CLI
 FAMILY_MAP = {
@@ -58,7 +57,12 @@ def main():
     print(f"[*] Beginning live simulation. Sending to {API_URL} every {args.delay} seconds...")
     print(f"[*] Open your dashboard at http://127.0.0.1:5000/ to watch the attack.\n")
 
-    api_key = os.environ.get("BRDS_API_KEY", "dev-key-123")
+    api_key = os.environ.get("BRDS_API_KEY")
+    if not api_key:
+        print("[!] ERROR: BRDS_API_KEY environment variable is missing.")
+        print("    Authentication is required. Run:")
+        print("    $env:BRDS_API_KEY=\"<your-key>\"; python scripts/simulate_attack.py")
+        sys.exit(1)
     headers = {
         "Content-Type": "application/json",
         "X-BRDS-API-Key": api_key,
