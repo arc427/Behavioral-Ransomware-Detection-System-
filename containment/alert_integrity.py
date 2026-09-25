@@ -28,11 +28,13 @@ def sign_alerts(alerts: list) -> str:
     }
     return json.dumps(signed_container, indent=2)
 
-def verify_and_load(alerts_path: Path | str) -> list:
+def verify_and_load(alerts_path: Path | str, allow_unsigned_legacy: bool = False) -> list:
     """Read alerts file, verify HMAC-SHA256 signature, and return alerts list.
     
     Raises:
-        RuntimeError: If signature mismatch is detected (tampered alerts).
+        ValueError: If file is malformed JSON, unsigned list (and legacy not permitted),
+                    or missing container fields.
+        RuntimeError: If HMAC key is missing, or if signature mismatch is detected (tampered alerts).
     """
     path = Path(alerts_path)
     if not path.exists():
@@ -47,15 +49,29 @@ def verify_and_load(alerts_path: Path | str) -> list:
     except Exception as e:
         raise ValueError(f"Invalid JSON format in alerts file: {e}")
         
-    # Backwards-compatible handling for raw arrays (e.g. legacy test runs)
+    # Isolate backward-compatible handling for raw arrays behind an EXPLICIT test-only flag
     if isinstance(data, list):
-        return data
+        if allow_unsigned_legacy or os.environ.get("BRDS_ALLOW_UNSIGNED_ALERTS_TEST_ONLY") == "1":
+            return data
+        raise ValueError(
+            f"SECURITY REJECTION: Alerts file {path} is an unsigned raw array. "
+            "Signed container format {'alerts': [...], 'sig': '...'} is strictly required on the production/containment path."
+        )
         
-    if not isinstance(data, dict) or "alerts" not in data or "sig" not in data:
+    if not isinstance(data, dict):
+        raise ValueError("Alerts file format invalid: root element must be a JSON object containing 'alerts' and 'sig'.")
+
+    if "alerts" not in data or "sig" not in data:
         raise ValueError("Alerts file format invalid: missing 'alerts' or 'sig' container fields.")
         
     alerts = data["alerts"]
     provided_sig = data["sig"]
+    
+    if not isinstance(alerts, list):
+        raise ValueError("Alerts container format invalid: 'alerts' field must be a list.")
+        
+    if not isinstance(provided_sig, str) or not provided_sig.strip():
+        raise ValueError("Alerts container format invalid: 'sig' field must be a non-empty string.")
     
     payload_str = json.dumps(alerts, separators=(',', ':'), sort_keys=True)
     key = _get_hmac_key()

@@ -10,12 +10,14 @@
 
 Traditional antivirus solutions rely on malware signatures or detect ransomware only after encryption has started. BRDS-PEC takes a different approach by monitoring **behavioral patterns** from Windows Sysmon telemetry and using a **multi-stage machine learning pipeline** to detect ransomware during its early execution phase.
 
-The system is a **research prototype** with containment locked to dry-run mode. Once a high-confidence attack is identified, it:
+The system features a **guarded automated containment engine** designed with multi-gate safety checks. In standard operation, containment runs in safe dry-run mode. Once a high-confidence attack is identified ($\ge 0.85$), it:
 
 - Creates HMAC-SHA256 signed alerts with cryptographic integrity verification
-- Logs the intended host-isolation and process-tree termination actions (dry-run only)
-- Generates explainable AI (SHAP / PyTorch Autograd) attribution reports
+- Logs intended host-isolation and process-tree termination actions (dry-run default) or executes guarded containment in approved lab VMs
+- Generates explainable AI (SHAP / PyTorch Autograd) attribution reports with explicit provenance tracking
 - Stores the incident in a SQLite database for forensic analysis via the SOC dashboard
+
+> **Validation Status:** Guarded live containment capability is implemented with strict multi-gate safety checks, but remains pending end-to-end isolated-VM validation. Default operation is strictly dry-run.
 
 ---
 
@@ -42,10 +44,10 @@ Trained on **20,402 behavioral windows** (2,785 attack + 17,617 genuine Windows 
 - **Two-Stage ML Pipeline** — Isolation Forest screening → LSTM sequence classification
 - **Real Baseline Data** — 17,617 genuine Windows 11 benign windows from SILRAD-1.0
 - **Cryptographic Alert Integrity** — HMAC-SHA256 signed alert containers and arm tokens
-- **Explainable AI (XAI)** — PyTorch Autograd gradient attributions explain every alert
+- **Explainable AI (XAI)** — PyTorch Autograd gradient attributions explain every alert with explicit provenance tracking
 - **SOC Dashboard** — dark-mode real-time monitoring with Chart.js risk timeline
-- **Dry-Run Containment** — host isolation and process tree collapse (logged, not executed)
-- **29 Automated Tests** — covering backend, ML, containment, XAI, and SILRAD adapter
+- **Multi-Gate Containment** — host isolation and process tree collapse (dry-run default, guarded lab execution)
+- **Comprehensive Automated Test Suite** — covering backend auth, ML pipeline, containment gates, HMAC verification, XAI provenance, and SILRAD adapter
 
 ---
 
@@ -62,9 +64,9 @@ Deep LSTM Sequence Classifier (Tier 2 — 2-layer Bidirectional LSTM)
   ↓
 Risk Score ∈ [0.0, 1.0]
   ↓
-≥ 0.85 → HMAC-SHA256 Signed Alert → Dry-Run Containment Log
+≥ 0.85 → HMAC-SHA256 Signed Alert → Multi-Gate Containment Execution (Dry-run default)
   ↓
-SOC Dashboard & XAI Attribution Modal
+SOC Dashboard & XAI Attribution Modal (Model-derived vs fallback provenance)
 ```
 
 ---
@@ -92,19 +94,19 @@ Events are aggregated into 5-second sliding windows per process, producing 17 nu
 
 ### Phase 3 — AI Detection Engine
 
-**Tier 1 — Isolation Forest:** Screens out normal system activity with unsupervised anomaly detection.
+**Tier 1 — Isolation Forest:** Screens out normal system activity with continuous anomaly scoring (`BRDS_IF_SCREENING_THRESHOLD`).
 
 **Tier 2 — LSTM Classifier:** A 2-layer Bidirectional LSTM with hidden dimension 64, concatenated Mean + Max pooling across 30 timesteps, and sigmoid output. Loaded with `torch.load(..., weights_only=True)` and verified against a SHA-256 hash manifest.
 
-### Phase 4 — Dry-Run Containment
+### Phase 4 — Guarded Containment
 
-When risk ≥ 0.85, the system **logs the intended response** without executing it:
-- Network adapter isolation (`ContainHost.ps1` — dry-run)
-- Process tree termination (`kill_process_tree.ps1` — dry-run)
+When risk ≥ 0.85, the containment engine evaluates the multi-gate authorization:
+- Network adapter isolation (`ContainHost.ps1`)
+- Process tree termination (`kill_process_tree.ps1`)
 - SHAP attribution report generation
-- Incident database entry
+- Incident database entry via authenticated API
 
-> ⚠️ Live containment is intentionally disabled. See [`docs/known_limitations.md`](docs/known_limitations.md).
+> ⚠️ Guarded live containment requires `BRDS_LAB_ENVIRONMENT_APPROVED=1`, `BRDS_LIVE_CONTAINMENT=1`, and a valid HMAC arm token. Otherwise, actions run in dry-run mode (logged without host disruption). Live containment capability remains pending end-to-end isolated-VM validation.
 
 ---
 

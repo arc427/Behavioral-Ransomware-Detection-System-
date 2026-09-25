@@ -7,9 +7,11 @@ from backend.app import create_app
 
 def test_read_only_dashboard_endpoints(tmp_path):
     import os
+    from containment.alert_integrity import sign_alerts
+    os.environ["BRDS_ALLOW_INSECURE_DEV_HMAC"] = "1"
     alerts = tmp_path / "alerts.json"
     telemetry = tmp_path / "windows.csv"
-    alerts.write_text(json.dumps([{"computer": "host-a", "technique_id": "T1486", "risk_score": 0.91, "mode": "dry_run"}]), encoding="utf-8")
+    alerts.write_text(sign_alerts([{"computer": "host-a", "technique_id": "T1486", "risk_score": 0.91, "mode": "dry_run"}]), encoding="utf-8")
     pd.DataFrame([{"computer": "host-a", "technique_id": "T1486", "event_count": 4}]).to_csv(telemetry, index=False)
     # Enable offline benchmark mode so the API reads from CSV/JSON files instead of empty SQL DB
     os.environ["BRDS_USE_OFFLINE_BENCHMARK"] = "1"

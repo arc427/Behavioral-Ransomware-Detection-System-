@@ -75,13 +75,14 @@ class SHAPExplainer:
                     "importance_value": val
                 })
 
-        # Normalize importance values so they sum to 1.0 (relative proportion)
+        # Normalize importance values so sum of absolute values is 1.0 (relative proportion)
+        # Preserves both positive (risk-increasing) and negative (risk-reducing) attribution signs
         total_importance = sum(abs(x["importance_value"]) for x in attributions)
         if total_importance > 0:
             for attr in attributions:
-                attr["importance_value"] = abs(attr["importance_value"]) / total_importance
+                attr["importance_value"] = attr["importance_value"] / total_importance
 
-        # Sort by absolute importance value descending
+        # Sort by absolute importance value descending while preserving sign
         attributions.sort(key=lambda x: abs(x["importance_value"]), reverse=True)
         return attributions
 
@@ -137,8 +138,8 @@ class LSTMSHAPExplainer:
             if len(shap_values.shape) == 3:
                 shap_values = shap_values[0]
                 
-            # Average absolute feature importance across all sequence timesteps
-            mean_importance = np.abs(shap_values).mean(axis=0)
+            # Average signed feature importance across all sequence timesteps
+            mean_importance = shap_values.mean(axis=0)
             attributions = [
                 {"feature_name": name, "importance_value": float(np.asarray(val).flatten()[0])}
                 for name, val in zip(self.lstm_infer.feature_names, mean_importance)
@@ -167,19 +168,19 @@ class LSTMSHAPExplainer:
             output.backward()
             
             grads = input_tensor.grad.detach().numpy()[0] # (seq_len, input_dim)
-            grad_x_input = np.abs(grads * features_scaled).mean(axis=0)
+            grad_x_input = (grads * features_scaled).mean(axis=0)
             
             attributions = [
                 {"feature_name": name, "importance_value": float(np.asarray(val).flatten()[0])}
                 for name, val in zip(self.lstm_infer.feature_names, grad_x_input)
             ]
             
-        # Normalize importance values so they sum to 1.0 (relative proportion)
-        # This ensures feature attributions are strictly bounded within [0.0, 1.0]
+        # Normalize importance values so sum of absolute values is 1.0 (relative proportion)
+        # Preserves both positive and negative attribution signs
         total_importance = sum(abs(x["importance_value"]) for x in attributions)
         if total_importance > 0:
             for attr in attributions:
-                attr["importance_value"] = abs(attr["importance_value"]) / total_importance
+                attr["importance_value"] = attr["importance_value"] / total_importance
 
         attributions.sort(key=lambda x: abs(x["importance_value"]), reverse=True)
         return attributions

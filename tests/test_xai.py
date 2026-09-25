@@ -172,3 +172,77 @@ def test_api_explanation_pdf_download(app_client):
     assert "attachment" in res.headers.get("Content-Disposition", "")
     assert len(res.data) > 100
 
+
+def test_xai_attribution_sign_preservation(tmp_path):
+    """Verify that positive and negative feature attributions preserve their signs after normalization."""
+    # Create model with 1 positive coefficient and 1 negative coefficient
+    import numpy as np
+    scaler = StandardScaler()
+    lr = LogisticRegression()
+    # 2 features: feat_pos, feat_neg
+    x_fake = np.array([[1.0, 10.0], [5.0, 2.0], [0.5, 8.0], [10.0, 1.0]])
+    y_fake = np.array([0, 1, 0, 1])
+    scaler.fit(x_fake)
+    lr.fit(scaler.transform(x_fake), y_fake)
+    
+    # Explicitly set weights: +1.0 on feat1, -1.0 on feat2
+    lr.coef_ = np.array([[1.5, -1.5]])
+    lr.intercept_ = np.array([0.0])
+    
+    pipeline = Pipeline([("scale", scaler), ("model", lr)])
+    model_path = tmp_path / "signed_model.joblib"
+    joblib.dump({
+        "feature_names": ["feat_pos", "feat_neg"],
+        "isolation_forest": None,
+        "supervised_model": pipeline
+    }, model_path)
+    
+    explainer = SHAPExplainer(model_path)
+    # Give high value to feat_pos (scaled > 0, coef > 0 => positive)
+    # Give high value to feat_neg (scaled > 0, coef < 0 => negative)
+    mean_vals = scaler.mean_
+    feat_dict = {"feat_pos": mean_vals[0] + 5.0, "feat_neg": mean_vals[1] + 5.0}
+    attributions = explainer.explain(feat_dict)
+    
+    attr_dict = {a["feature_name"]: a["importance_value"] for a in attributions}
+    assert attr_dict["feat_pos"] > 0, "Positive risk-contributing feature must have positive attribution"
+    assert attr_dict["feat_neg"] < 0, "Negative risk-reducing feature must have negative attribution"
+    # Sum of absolute values should be 1.0
+    total_abs = sum(abs(v) for v in attr_dict.values())
+    assert pytest.approx(total_abs, rel=1e-3) == 1.0
+
+
+def test_xai_provenance_flags_distinction(app_client):
+    """Verify model-derived vs fallback explanations are clearly distinguishable."""
+    alert_id = "2026-07-19T04:10:00Z"
+    
+    # 1. Model-derived success path
+    res = app_client.get(f'/api/explanations/{alert_id}')
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data.get("model_derived") is True
+    assert data.get("fallback") in (False, None)
+    
+    # 2. Failure fallback path (clear cached DB logs so it forces dynamic computation with broken model path)
+    from backend.models.explainability_logs import ExplainabilityLog
+    with app_client.application.app_context():
+        ExplainabilityLog.query.delete()
+        db.session.commit()
+
+    orig_path = app_client.application.config.get("MODEL_PATH")
+    orig_infer = app_client.application.config.get("LSTM_INFER")
+    app_client.application.config["LSTM_INFER"] = None
+    app_client.application.config["MODEL_PATH"] = Path("/nonexistent/m.joblib")
+    
+    # Test error fallback specifically with missing model
+    res_err = app_client.get(f'/api/explanations/{alert_id}')
+    data_err = res_err.get_json()
+    assert data_err.get("fallback") is True
+    assert data_err.get("model_derived") is False
+    assert data_err.get("provenance") == "heuristic_fallback_not_model_derived"
+    assert "NOT MODEL-DERIVED" in data_err.get("warning", "")
+    
+    app_client.application.config["MODEL_PATH"] = orig_path
+    app_client.application.config["LSTM_INFER"] = orig_infer
+
+

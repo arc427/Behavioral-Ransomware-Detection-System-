@@ -97,7 +97,8 @@ def app_client():
         'DATABASE_PATH': Path(db_path),
         'LSTM_MODEL_PATH': Path(lstm_path),
         'MODEL_PATH': Path(baseline_path),
-        'ALERTS_PATH': Path(alerts_path)
+        'ALERTS_PATH': Path(alerts_path),
+        'BRDS_API_KEY': 'secret-test-key-12345'
     })
     
     with app.app_context():

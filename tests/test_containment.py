@@ -48,8 +48,9 @@ def test_poll_alerts_trigger():
             }
         ]
         
-        with open(alerts_path, "w", encoding="utf-8") as f:
-            json.dump(mock_alerts, f)
+        from containment.alert_integrity import sign_alerts
+        os.environ["BRDS_ALLOW_INSECURE_DEV_HMAC"] = "1"
+        alerts_path.write_text(sign_alerts(mock_alerts), encoding="utf-8")
             
         arm_token_path = Path(tmpdir) / ".arm_token"
         processed = set()

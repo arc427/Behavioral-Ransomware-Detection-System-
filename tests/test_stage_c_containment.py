@@ -303,3 +303,93 @@ def test_c10_containment_status_returns_404_for_unknown_incident(app_with_incide
             headers={"X-BRDS-API-Key": "test-key"},
         )
     assert res.status_code == 404
+
+
+# ── HMAC alert verification tests (Phase 1) ────────────────────────────────────
+
+def test_hmac_valid_signed_alert_accepted(tmp_path, monkeypatch):
+    """Valid HMAC signed alerts container must be successfully loaded."""
+    from containment.alert_integrity import sign_alerts, verify_and_load
+    monkeypatch.setenv("BRDS_ALLOW_INSECURE_DEV_HMAC", "1")
+    alert = [{"computer": "host-test", "risk_score": 0.95, "window_start": "2026-01-01T00:00:00Z"}]
+    path = tmp_path / "signed_alerts.json"
+    path.write_text(sign_alerts(alert), encoding="utf-8")
+
+    loaded = verify_and_load(path)
+    assert len(loaded) == 1
+    assert loaded[0]["computer"] == "host-test"
+
+
+def test_hmac_invalid_signature_rejected(tmp_path, monkeypatch):
+    """Alerts container with tampered/invalid signature must raise RuntimeError."""
+    from containment.alert_integrity import sign_alerts, verify_and_load
+    monkeypatch.setenv("BRDS_ALLOW_INSECURE_DEV_HMAC", "1")
+    alert = [{"computer": "host-test", "risk_score": 0.95, "window_start": "2026-01-01T00:00:00Z"}]
+    path = tmp_path / "tampered_alerts.json"
+    container = json.loads(sign_alerts(alert))
+    container["sig"] = "0000000000000000000000000000000000000000000000000000000000000000"
+    path.write_text(json.dumps(container), encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="HMAC signature verification failed"):
+        verify_and_load(path)
+
+
+def test_hmac_missing_signature_rejected(tmp_path, monkeypatch):
+    """Container missing 'sig' key must raise ValueError."""
+    from containment.alert_integrity import verify_and_load
+    monkeypatch.setenv("BRDS_ALLOW_INSECURE_DEV_HMAC", "1")
+    path = tmp_path / "missing_sig.json"
+    path.write_text(json.dumps({"alerts": [{"computer": "host-test"}]}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="missing 'alerts' or 'sig'"):
+        verify_and_load(path)
+
+
+def test_hmac_malformed_payload_rejected(tmp_path, monkeypatch):
+    """Malformed container (invalid json or bad alerts field type) must raise ValueError."""
+    from containment.alert_integrity import verify_and_load
+    monkeypatch.setenv("BRDS_ALLOW_INSECURE_DEV_HMAC", "1")
+    
+    # 1. Non-JSON text
+    bad_json = tmp_path / "bad.json"
+    bad_json.write_text("NOT JSON CONTENT", encoding="utf-8")
+    with pytest.raises(ValueError, match="Invalid JSON format"):
+        verify_and_load(bad_json)
+
+    # 2. alerts field is not a list
+    bad_container = tmp_path / "bad_container.json"
+    bad_container.write_text(json.dumps({"alerts": "not a list", "sig": "abc"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="'alerts' field must be a list"):
+        verify_and_load(bad_container)
+
+
+def test_hmac_raw_unsigned_list_rejected_by_default(tmp_path, monkeypatch):
+    """Raw unsigned JSON list MUST be rejected by default on the production path."""
+    from containment.alert_integrity import verify_and_load
+    monkeypatch.setenv("BRDS_ALLOW_INSECURE_DEV_HMAC", "1")
+    monkeypatch.delenv("BRDS_ALLOW_UNSIGNED_ALERTS_TEST_ONLY", raising=False)
+    
+    raw_path = tmp_path / "raw_unsigned.json"
+    raw_path.write_text(json.dumps([{"computer": "host-test", "risk_score": 0.99}]), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="unsigned raw array"):
+        verify_and_load(raw_path)
+
+
+def test_hmac_raw_unsigned_list_allowed_with_explicit_test_flag(tmp_path, monkeypatch):
+    """Raw unsigned JSON list is permitted ONLY when explicit test override flag is set."""
+    from containment.alert_integrity import verify_and_load
+    monkeypatch.setenv("BRDS_ALLOW_INSECURE_DEV_HMAC", "1")
+    
+    raw_path = tmp_path / "raw_unsigned_test.json"
+    raw_path.write_text(json.dumps([{"computer": "host-test", "risk_score": 0.99}]), encoding="utf-8")
+
+    # 1. Via allow_unsigned_legacy parameter
+    loaded1 = verify_and_load(raw_path, allow_unsigned_legacy=True)
+    assert len(loaded1) == 1
+
+    # 2. Via environment variable override
+    monkeypatch.setenv("BRDS_ALLOW_UNSIGNED_ALERTS_TEST_ONLY", "1")
+    loaded2 = verify_and_load(raw_path)
+    assert len(loaded2) == 1
+

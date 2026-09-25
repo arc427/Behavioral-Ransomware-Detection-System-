@@ -19,6 +19,7 @@ def explanation(alert_id: str):
             return jsonify({
                 "alert_id": alert_id,
                 "available": True,
+                "model_derived": True,
                 "attributions": attributions
             })
     except OperationalError:
