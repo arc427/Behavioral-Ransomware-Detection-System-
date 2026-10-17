@@ -22,8 +22,18 @@ LSTM_MODEL_PATH = MODEL_DIR / "lstm_model.pth"
 # The current VM validation candidate is -0.188196 (set via BRDS_IF_SCREENING_THRESHOLD).
 # Calibrate on target environment data before production deployment.
 DEFAULT_IF_SCREENING_THRESHOLD = -0.167461
-IF_SCREENING_THRESHOLD = float(
-    os.environ.get("BRDS_IF_SCREENING_THRESHOLD")
-    or os.environ.get("IF_SCREENING_THRESHOLD")
-    or DEFAULT_IF_SCREENING_THRESHOLD
+
+def _get_float_env(key: str, fallback: float) -> float:
+    val = os.environ.get(key)
+    if val is not None and val.strip():
+        try:
+            return float(val.strip())
+        except ValueError:
+            pass
+    return fallback
+
+IF_SCREENING_THRESHOLD = _get_float_env(
+    "BRDS_IF_SCREENING_THRESHOLD",
+    _get_float_env("IF_SCREENING_THRESHOLD", DEFAULT_IF_SCREENING_THRESHOLD)
 )
+

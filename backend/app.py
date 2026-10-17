@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -99,9 +100,9 @@ def create_app(overrides: dict | None = None) -> Flask:
             print(f"Warning: Isolation Forest artifact not found at {baseline_path}")
 
     except Exception as exc:
-        pipeline_status["load_error"] = str(exc)
+        pipeline_status["load_error"] = "Pipeline initialization error (see server logs)"
         app.config["INFERENCE_PIPELINE"] = None
-        print(f"Warning: Failed to load inference pipeline: {exc}")
+        app.logger.error("Failed to load inference pipeline: %s", exc, exc_info=True)
 
     app.config["PIPELINE_STATUS"] = pipeline_status
 
@@ -111,7 +112,6 @@ def create_app(overrides: dict | None = None) -> Flask:
     app.config["WATCHDOG"] = watchdog
 
     # ── CORS ─────────────────────────────────────────────────────────────────
-    import os
     raw_origins = os.environ.get("BRDS_CORS_ORIGINS") or app.config.get("BRDS_CORS_ORIGINS")
     if raw_origins:
         if isinstance(raw_origins, list):
@@ -134,7 +134,6 @@ def create_app(overrides: dict | None = None) -> Flask:
 
     @app.get("/api/health")
     def health():
-        import os as _os
         paths = {
             key: Path(app.config[key])
             for key in ("ALERTS_PATH", "TELEMETRY_PATH", "MODEL_PATH", "REPORT_PATH")
@@ -143,7 +142,7 @@ def create_app(overrides: dict | None = None) -> Flask:
         ps = app.config.get("PIPELINE_STATUS", {})
 
         # Containment mode comes from the environment — not hardcoded
-        live_containment_env = _os.environ.get("BRDS_LIVE_CONTAINMENT", "0")
+        live_containment_env = os.environ.get("BRDS_LIVE_CONTAINMENT", "0")
         containment_mode = "lab_armed" if live_containment_env == "1" else "dry_run"
 
         overall_status = "ok" if sensor_status["sensor_healthy"] else "SENSOR_SILENCED"
@@ -184,5 +183,4 @@ def create_app(overrides: dict | None = None) -> Flask:
 
 
 if __name__ == "__main__":
-    import os
     create_app().run(host="127.0.0.1", port=5000, debug=os.getenv("FLASK_DEBUG", "0") == "1")

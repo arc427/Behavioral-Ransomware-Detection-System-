@@ -54,7 +54,7 @@ def telemetry():
         for query_name, column in (("host", "computer"), ("technique", "technique_id"), ("source", "source")):
             value = request.args.get(query_name)
             if value and column in frame:
-                frame = frame[frame[column].astype(str).str.contains(value, case=False, na=False)]
+                frame = frame[frame[column].astype(str).str.contains(value, case=False, na=False, regex=False)]
         limit, offset = _page_args()
         total = len(frame)
         page = frame.iloc[offset : offset + limit].where(pd.notna(frame), None)
@@ -98,170 +98,193 @@ def score_live():
 
     features = data.get("features", {})
 
-    # 1. Persist the incoming FeatureVector
-    vec = FeatureVector(
-        computer=computer,
-        process_key=process_key,
-        window_start=window_start,
-        label=int(data.get("label", 0)),
-        technique_id=str(data.get("technique_id", "unknown")),
-        scenario=str(data.get("scenario", "unknown")),
-        source=str(data.get("source", "live-ingestion")),
-        features_json=json.dumps(features),
-    )
-    db.session.add(vec)
-    db.session.flush()  # assign vec.id without committing so we can reference it
-
-    # Ping Telemetry Watchdog to register active telemetry heartbeat
-    watchdog = current_app.config.get("WATCHDOG")
-    if watchdog:
-        watchdog.ping(count=1)
-
-    # 2. Run two-stage inference
-    pipeline = current_app.config.get("INFERENCE_PIPELINE")
-    window_row = vec.to_dict()
-    inference_result = None
-    final_risk = 0.0
-    inference_error: str | None = None
-
-    def _load_history() -> list[dict]:
-        records = (
-            FeatureVector.query.filter(FeatureVector.computer == computer)
-            .filter(FeatureVector.window_start <= window_start)
-            .order_by(FeatureVector.window_start.desc())
-            .limit(30)
-            .all()
-        )
-        records.reverse()
-        return [row.to_dict() for row in records]
-
-    if pipeline is not None:
-        try:
-            inference_result = pipeline.evaluate_window(window_row, history_loader=_load_history)
-            final_risk = inference_result.final_risk_score
-            # Diagnostic: trace real events through the full pipeline
-            logger.info(
-                "PIPELINE_TRACE window_start=%s computer=%s process_key=%s "
-                "source=%s if_score=%.6f if_threshold=%.6f if_anomalous=%s "
-                "lstm_invoked=%s lstm_score=%s lstm_decision=%s "
-                "final_risk=%.4f would_alert=%s skip_reason=%s",
-                window_start, computer, process_key,
-                vec.source,
-                inference_result.anomaly_score,
-                inference_result.if_screening_threshold,
-                inference_result.isolation_forest_anomalous,
-                inference_result.lstm_invoked,
-                inference_result.lstm_score,
-                inference_result.lstm_decision,
-                inference_result.final_risk_score,
-                inference_result.would_alert,
-                inference_result.skip_reason,
-            )
-        except Exception as exc:
-            inference_error = str(exc)
-            current_app.logger.error("Two-stage inference error: %s", exc, exc_info=True)
-    else:
-        inference_error = "INFERENCE_PIPELINE not loaded"
-        current_app.logger.warning("INFERENCE_PIPELINE is not loaded; window was stored but not scored")
-
-    # Update FeatureVector with scored results
-    vec.anomaly_score = inference_result.anomaly_score if inference_result else None
-    vec.risk_score = final_risk
-
-    # 3. Write per-window audit record
-    if inference_result is not None:
-        meta = inference_result.models
-        try:
-            threshold_val = float(meta.get("lstm_alert_threshold", 0.85))
-        except (TypeError, ValueError):
-            threshold_val = 0.85
-        schema_ok = meta.get("schema_aligned", "True") == "True"
-
-        decision_row = PipelineDecision(
-            window_start=window_start,
+    try:
+        # 1. Persist the incoming FeatureVector
+        vec = FeatureVector(
             computer=computer,
             process_key=process_key,
-            anomaly_score=inference_result.anomaly_score,
-            isolation_forest_decision=inference_result.isolation_forest_decision,
-            isolation_forest_anomalous=inference_result.isolation_forest_anomalous,
-            if_screening_threshold=inference_result.if_screening_threshold,
-            if_legacy_anomalous=inference_result.isolation_forest_legacy_anomalous,
-            lstm_invoked=inference_result.lstm_invoked,
-            lstm_score=inference_result.lstm_score,
-            lstm_decision=inference_result.lstm_decision,
-            lstm_sequence_windows=inference_result.lstm_sequence_windows,
-            final_risk_score=inference_result.final_risk_score,
-            would_alert=inference_result.would_alert,
-            skip_reason=inference_result.skip_reason,
-            if_model_artifact=meta.get("isolation_forest"),
-            lstm_model_artifact=meta.get("lstm"),
-            lstm_alert_threshold=threshold_val,
-            schema_aligned=schema_ok,
-            source=vec.source,
-            technique_id=vec.technique_id,
+            window_start=window_start,
+            label=int(data.get("label", 0)),
+            technique_id=str(data.get("technique_id", "unknown")),
+            scenario=str(data.get("scenario", "unknown")),
+            source=str(data.get("source", "live-ingestion")),
+            features_json=json.dumps(features),
         )
-        db.session.add(decision_row)
+        db.session.add(vec)
+        db.session.flush()  # assign vec.id without committing so we can reference it
 
-    # 4. Create a signed dry-run alert when the pipeline would alert
-    alert_created = False
-    would_alert = inference_result.would_alert if inference_result else False
-    if would_alert:
-        existing = Incident.query.filter_by(timestamp=window_start, computer=computer).first()
-        if not existing:
-            alert_created = True
-            inc = Incident(
-                timestamp=window_start,
-                computer=computer,
-                ransomware_family=vec.technique_id,
-                risk_score=final_risk,
-                process_id=(
-                    int(process_key.split(":")[-1])
-                    if ":" in process_key and process_key.split(":")[-1].isdigit()
-                    else 9999
-                ),
-                status="ACTIVE",
+        # Ping Telemetry Watchdog to register active telemetry heartbeat
+        watchdog = current_app.config.get("WATCHDOG")
+        if watchdog:
+            watchdog.ping(count=1)
+
+        # 2. Run two-stage inference
+        pipeline = current_app.config.get("INFERENCE_PIPELINE")
+        window_row = vec.to_dict()
+        inference_result = None
+        final_risk = 0.0
+        inference_error: str | None = None
+
+        def _load_history() -> list[dict]:
+            records = (
+                FeatureVector.query.filter(FeatureVector.computer == computer)
+                .filter(FeatureVector.window_start <= window_start)
+                .order_by(FeatureVector.window_start.desc())
+                .limit(30)
+                .all()
             )
-            db.session.add(inc)
+            records.reverse()
+            return [row.to_dict() for row in records]
 
-            from containment.alert_integrity import sign_alerts, verify_and_load
+        if pipeline is not None:
+            try:
+                inference_result = pipeline.evaluate_window(window_row, history_loader=_load_history)
+                final_risk = inference_result.final_risk_score
+                # Diagnostic: trace real events through the full pipeline
+                logger.info(
+                    "PIPELINE_TRACE window_start=%s computer=%s process_key=%s "
+                    "source=%s if_score=%.6f if_threshold=%.6f if_anomalous=%s "
+                    "lstm_invoked=%s lstm_score=%s lstm_decision=%s "
+                    "final_risk=%.4f would_alert=%s skip_reason=%s",
+                    window_start, computer, process_key,
+                    vec.source,
+                    inference_result.anomaly_score,
+                    inference_result.if_screening_threshold,
+                    inference_result.isolation_forest_anomalous,
+                    inference_result.lstm_invoked,
+                    inference_result.lstm_score,
+                    inference_result.lstm_decision,
+                    inference_result.final_risk_score,
+                    inference_result.would_alert,
+                    inference_result.skip_reason,
+                )
+            except Exception as exc:
+                inference_error = str(exc)
+                current_app.logger.error("Two-stage inference error: %s", exc, exc_info=True)
+        else:
+            inference_error = "INFERENCE_PIPELINE not loaded"
+            current_app.logger.warning("INFERENCE_PIPELINE is not loaded; window was stored but not scored")
 
-            alerts_path = Path(current_app.config["ALERTS_PATH"])
-            alerts = []
-            if alerts_path.exists():
-                try:
-                    alerts = verify_and_load(alerts_path)
-                except Exception:
-                    alerts = []
+        # Update FeatureVector with scored results
+        vec.anomaly_score = inference_result.anomaly_score if inference_result else None
+        vec.risk_score = final_risk
 
-            new_alert = {
-                "computer": computer,
-                "process_key": process_key,
-                "window_start": window_start,
-                "timestamp": window_start,
-                "label": vec.label,
-                "technique_id": vec.technique_id,
-                "scenario": vec.scenario,
-                "source": vec.source,
-                "risk_score": final_risk,
-                "anomaly_score": inference_result.anomaly_score if inference_result else None,
-                "isolation_forest_decision": inference_result.isolation_forest_decision if inference_result else None,
-                "lstm_invoked": inference_result.lstm_invoked if inference_result else False,
-                "lstm_score": inference_result.lstm_score if inference_result else None,
-            }
-            alerts.append(new_alert)
-            alerts_path.write_text(sign_alerts(alerts), encoding="utf-8")
+        # 3. Write per-window audit record
+        if inference_result is not None:
+            meta = inference_result.models
+            try:
+                threshold_val = float(meta.get("lstm_alert_threshold", 0.85))
+            except (TypeError, ValueError):
+                threshold_val = 0.85
+            schema_ok = meta.get("schema_aligned", "True") == "True"
 
-    db.session.commit()
+            decision_row = PipelineDecision(
+                window_start=window_start,
+                computer=computer,
+                process_key=process_key,
+                anomaly_score=inference_result.anomaly_score,
+                isolation_forest_decision=inference_result.isolation_forest_decision,
+                isolation_forest_anomalous=inference_result.isolation_forest_anomalous,
+                if_screening_threshold=inference_result.if_screening_threshold,
+                if_legacy_anomalous=inference_result.isolation_forest_legacy_anomalous,
+                lstm_invoked=inference_result.lstm_invoked,
+                lstm_score=inference_result.lstm_score,
+                lstm_decision=inference_result.lstm_decision,
+                lstm_sequence_windows=inference_result.lstm_sequence_windows,
+                final_risk_score=inference_result.final_risk_score,
+                would_alert=inference_result.would_alert,
+                skip_reason=inference_result.skip_reason,
+                if_model_artifact=meta.get("isolation_forest"),
+                lstm_model_artifact=meta.get("lstm"),
+                lstm_alert_threshold=threshold_val,
+                schema_aligned=schema_ok,
+                source=vec.source,
+                technique_id=vec.technique_id,
+            )
+            db.session.add(decision_row)
 
-    response: dict = {
-        "status": "success",
-        "risk_score": final_risk,
-        "alert_created": alert_created,
-        "containment_triggered": False,
-        "mode": "dry_run",
-    }
-    if inference_result is not None:
-        response["pipeline"] = inference_result.to_api_dict()
-    if inference_error is not None:
-        response["inference_error"] = inference_error
-    return jsonify(response)
+        # 4. Create a signed dry-run alert when the pipeline would alert
+        alert_created = False
+        would_alert = inference_result.would_alert if inference_result else False
+        if would_alert:
+            existing = Incident.query.filter_by(timestamp=window_start, computer=computer).first()
+            if not existing:
+                alert_created = True
+                inc = Incident(
+                    timestamp=window_start,
+                    computer=computer,
+                    ransomware_family=vec.technique_id,
+                    risk_score=final_risk,
+                    process_id=(
+                        int(process_key.split(":")[-1])
+                        if ":" in process_key and process_key.split(":")[-1].isdigit()
+                        else 9999
+                    ),
+                    status="ACTIVE",
+                )
+                db.session.add(inc)
+
+                from containment.alert_integrity import sign_alerts, verify_and_load
+
+                alerts_path = Path(current_app.config["ALERTS_PATH"])
+                alerts = []
+                if alerts_path.exists():
+                    try:
+                        alerts = verify_and_load(alerts_path)
+                    except RuntimeError as tamper_err:
+                        current_app.logger.critical(
+                            "SECURITY BREACH: Alert file tampering detected! %s", tamper_err
+                        )
+                        # Preserve tampered evidence and quarantine
+                        quarantine_path = alerts_path.with_suffix(".tampered")
+                        try:
+                            alerts_path.replace(quarantine_path)
+                        except Exception:
+                            pass
+                        alerts = []
+                    except ValueError as val_err:
+                        current_app.logger.warning("Malformed alert file format (resetting): %s", val_err)
+                        alerts = []
+
+                new_alert = {
+                    "computer": computer,
+                    "process_key": process_key,
+                    "window_start": window_start,
+                    "timestamp": window_start,
+                    "label": vec.label,
+                    "technique_id": vec.technique_id,
+                    "scenario": vec.scenario,
+                    "source": vec.source,
+                    "risk_score": final_risk,
+                    "anomaly_score": inference_result.anomaly_score if inference_result else None,
+                    "isolation_forest_decision": inference_result.isolation_forest_decision if inference_result else None,
+                    "lstm_invoked": inference_result.lstm_invoked if inference_result else False,
+                    "lstm_score": inference_result.lstm_score if inference_result else None,
+                }
+                alerts.append(new_alert)
+                
+                # Atomic file replacement to prevent race conditions or corrupted JSON
+                signed_content = sign_alerts(alerts)
+                tmp_path = alerts_path.with_suffix(".tmp")
+                tmp_path.write_text(signed_content, encoding="utf-8")
+                tmp_path.replace(alerts_path)
+
+        db.session.commit()
+
+        response: dict = {
+            "status": "success",
+            "risk_score": final_risk,
+            "alert_created": alert_created,
+            "containment_triggered": False,
+            "mode": "dry_run",
+        }
+        if inference_result is not None:
+            response["pipeline"] = inference_result.to_api_dict()
+        if inference_error is not None:
+            response["inference_error"] = inference_error
+        return jsonify(response)
+
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error("Live scoring pipeline error; session rolled back: %s", exc, exc_info=True)
+        return jsonify({"error": "Internal scoring error", "details": str(exc)}), 500

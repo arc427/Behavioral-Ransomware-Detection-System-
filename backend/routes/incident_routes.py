@@ -22,6 +22,9 @@ def _alerts() -> list[dict]:
         return []
     try:
         return verify_and_load(path)
+    except RuntimeError as tamper_err:
+        current_app.logger.critical("SECURITY BREACH: Alert file tampering detected in _alerts(): %s", tamper_err)
+        return []
     except Exception:
         return []
 

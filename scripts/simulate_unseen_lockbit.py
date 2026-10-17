@@ -6,9 +6,11 @@ and streams it live to the dashboard API.
 This family was NOT in the training dataset.
 """
 
+import os
+import sys
 import time
-import requests
 from datetime import datetime, timezone
+import requests
 
 API_URL = "http://127.0.0.1:5000/api/score/live"
 
@@ -67,7 +69,6 @@ def main():
     print("[*] Generating synthetic zero-day trace for unseen family: LockBit")
     trace = generate_lockbit_trace()
     
-    import os
     api_key = os.environ.get("BRDS_API_KEY")
     if not api_key:
         print("[!] ERROR: BRDS_API_KEY environment variable is missing.")
@@ -77,7 +78,6 @@ def main():
     headers = {
         "Content-Type": "application/json",
         "X-BRDS-API-Key": api_key,
-        "X-API-Key": api_key,
     }
 
     print(f"[*] Beginning live simulation. Sending to {API_URL} every 1 second...")

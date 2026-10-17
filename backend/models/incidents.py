@@ -3,10 +3,13 @@ from backend.models import db
 class Incident(db.Model):
     """SQLAlchemy model for Security Incident Alerts."""
     __tablename__ = 'incidents'
+    __table_args__ = (
+        db.Index('idx_incidents_ts_computer', 'timestamp', 'computer'),
+    )
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    timestamp = db.Column(db.String(100), nullable=False)
-    computer = db.Column(db.String(100), nullable=False)
+    timestamp = db.Column(db.String(100), nullable=False, index=True)
+    computer = db.Column(db.String(100), nullable=False, index=True)
     ransomware_family = db.Column(db.String(100), nullable=False)
     risk_score = db.Column(db.Float, nullable=False)
     process_id = db.Column(db.Integer, nullable=False)

@@ -4,11 +4,14 @@ from backend.models import db
 class FeatureVector(db.Model):
     """SQLAlchemy model for Aggregated Telemetry Feature Vectors."""
     __tablename__ = 'feature_vectors'
+    __table_args__ = (
+        db.Index('idx_fv_computer_window', 'computer', 'window_start'),
+    )
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    computer = db.Column(db.String(100), nullable=False)
+    computer = db.Column(db.String(100), nullable=False, index=True)
     process_key = db.Column(db.String(100), nullable=False)
-    window_start = db.Column(db.String(100), nullable=False)
+    window_start = db.Column(db.String(100), nullable=False, index=True)
     label = db.Column(db.Integer, nullable=False)
     technique_id = db.Column(db.String(100), nullable=False)
     scenario = db.Column(db.String(100), nullable=False)
