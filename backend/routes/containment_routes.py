@@ -10,7 +10,7 @@ daemon already did.
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import OperationalError
 
 from backend.auth import require_api_key
@@ -49,17 +49,21 @@ def update_containment_status():
         incident = Incident.query.filter_by(
             timestamp=window_start, computer=computer
         ).first()
+        if incident is None:
+            return jsonify({
+                "status": "not_found",
+                "detail": f"No incident for window_start={window_start} computer={computer}",
+            }), 404
+
+        incident.status = new_status
+        db.session.commit()
     except OperationalError:
+        db.session.rollback()
         return jsonify({"error": "database unavailable"}), 503
-
-    if incident is None:
-        return jsonify({
-            "status": "not_found",
-            "detail": f"No incident for window_start={window_start} computer={computer}",
-        }), 404
-
-    incident.status = new_status
-    db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error("Failed to commit containment status: %s", exc, exc_info=True)
+        return jsonify({"error": "Failed to update containment status", "detail": str(exc)}), 500
 
     return jsonify({
         "status": "updated",

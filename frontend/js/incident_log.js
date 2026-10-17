@@ -92,11 +92,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Sync manual containment action with backend database
+            const apiKey = window.BRDS_API_KEY || 'dev-hmac-key';
             fetch(`${API_BASE}/api/containment/status`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-BRDS-API-Key': apiKey
+                },
                 body: JSON.stringify({
-                    window_start: inc.id,
+                    window_start: inc.timestamp || inc.window_start || inc.id,
                     computer: inc.computer,
                     status: 'CONTAINED'
                 })

@@ -69,6 +69,7 @@ def explanation(alert_id: str):
             "attributions": attributions
         })
     except Exception as e:
+        db.session.rollback()
         current_app.logger.exception("XAI explanation computation failed for alert_id=%s", alert_id)
         # Fallback if SQLite/model is not initialized: return mock explanations to keep frontend active
         mock_attributions = [

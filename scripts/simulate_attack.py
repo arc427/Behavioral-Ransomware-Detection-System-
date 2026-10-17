@@ -5,6 +5,8 @@ Streams historical ransomware telemetry to the live dashboard.
 
 import argparse
 import json
+import os
+import sys
 import time
 import requests
 import pandas as pd
@@ -66,7 +68,6 @@ def main():
     headers = {
         "Content-Type": "application/json",
         "X-BRDS-API-Key": api_key,
-        "X-API-Key": api_key,
     }
 
     feature_cols = [

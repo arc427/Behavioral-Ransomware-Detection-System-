@@ -165,7 +165,13 @@ def poll_alerts(
         if not alert_id or alert_id in processed_alerts:
             continue
 
-        risk_score = float(alert.get("risk_score", 0.0))
+        try:
+            risk_score = float(alert.get("risk_score", 0.0))
+        except (ValueError, TypeError):
+            logger.warning("Malformed risk_score in alert %s; skipping", alert_id)
+            processed_alerts.add(alert_id)
+            continue
+
         if risk_score < ALERT_THRESHOLD:
             processed_alerts.add(alert_id)
             continue
